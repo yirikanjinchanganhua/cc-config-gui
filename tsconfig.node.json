@@ -16,6 +16,7 @@
   "include": [
     "electron/**/*",
     "server/**/*",
+    "src/lib/**/*",
     "electron-vite.config.*",
     "electron-builder.config.*"
   ]
