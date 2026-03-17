@@ -26,3 +26,14 @@ export interface ConnectivityResult {
   statusCode?: number
   error?: string
 }
+
+export interface ProfileService {
+  listProfiles(): Promise<Profile[]>
+  createProfile(raw: RawProfile): Promise<Profile>
+  updateProfile(id: string, raw: RawProfile): Promise<Profile>
+  deleteProfile(id: string): Promise<void>
+  activateProfile(id: string): Promise<Profile>
+  testConnectivity(profileId: string): Promise<ConnectivityResult>
+  importProfiles(profiles: RawProfile[]): Promise<{ imported: number; skipped: number }>
+  exportProfiles(): Promise<RawProfile[]>
+}
