@@ -15,6 +15,9 @@ export default {
         'theme-text-muted': 'var(--color-text-muted)',
         'theme-selected-bg': 'var(--color-selected-bg)',
         'theme-border': 'var(--color-border)',
+        'theme-tooltip-bg': 'var(--color-tooltip-bg)',
+        'theme-tooltip-text': 'var(--color-tooltip-text)',
+        'theme-tooltip-border': 'var(--color-tooltip-border)',
       }
     }
   },

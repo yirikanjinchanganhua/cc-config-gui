@@ -12,6 +12,9 @@
   --color-text-muted: #6b7280;
   --color-selected-bg: #e2e8f0;
   --color-border: #e5e7eb;
+  --color-tooltip-bg: #1f2937;
+  --color-tooltip-text: #f9fafb;
+  --color-tooltip-border: #374151;
 }
 
 /* Dark mode */
@@ -25,5 +28,8 @@
     --color-text-muted: #9ca3af;
     --color-selected-bg: #1e293b;
     --color-border: #374151;
+    --color-tooltip-bg: #374151;
+    --color-tooltip-text: #f9fafb;
+    --color-tooltip-border: #4b5563;
   }
 }
