@@ -16,7 +16,8 @@
     "typecheck:web": "tsc --noEmit -p tsconfig.web.json --composite false"
   },
   "dependencies": {
-    "electron-updater": "^6.1.7"
+    "electron-updater": "^6.1.7",
+    "nanoid": "^5.1.7"
   },
   "devDependencies": {
     "@electron-toolkit/preload": "^3.0.1",
