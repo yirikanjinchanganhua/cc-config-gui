@@ -19,5 +19,10 @@
     "src/lib/**/*",
     "electron-vite.config.*",
     "electron-builder.config.*"
+  ],
+  "exclude": [
+    "src/lib/api-client.ts",
+    "src/lib/electron-api.ts",
+    "src/lib/http-api.ts"
   ]
 }
