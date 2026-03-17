@@ -1,6 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import './assets/main.css'
 import Sidebar from './components/Sidebar'
+import DetailPanel from './components/DetailPanel'
+import ProfileForm from './components/ProfileForm'
+import Tooltip from './components/Tooltip'
 import { ToastContainer, type ToastMessage } from './components/Toast'
 import ConfirmDialog from './components/ConfirmDialog'
 import { api } from './lib/api-client'
@@ -41,10 +44,36 @@ interface ConfirmState {
   toImport: RawProfile[]
 }
 
+const importTooltipContent = (
+  <div className="space-y-2">
+    <p className="font-semibold">格式示例（JSON 数组）：</p>
+    <pre className="bg-black/20 rounded px-2 py-1.5 text-[10px] leading-relaxed font-mono whitespace-pre-wrap">
+{`[
+  {
+    "name": "My Profile",
+    "apiKey": "sk-ant-...",
+    "baseUrl": "https://api.anthropic.com",
+    "model": "claude-sonnet-4-6"
+  }
+]`}
+    </pre>
+    <p className="text-theme-tooltip-text/80">合并到现有档案，同名档案可选择是否覆盖。</p>
+  </div>
+)
+
+const exportTooltipContent = (
+  <div className="space-y-1.5">
+    <p>导出为 JSON 文件，可备份或跨设备同步。</p>
+    <p className="text-yellow-300 font-medium">⚠️ 文件含明文 API Key，请妥善保管，勿分享或上传至公开位置。</p>
+  </div>
+)
+
 function App(): JSX.Element {
   const [profiles, setProfiles] = useState<Profile[]>([])
-  const [activeProfileId] = useState<string | null>(null)
+  const [activeProfileId, setActiveProfileId] = useState<string | null>(null)
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null)
+  const [showForm, setShowForm] = useState(false)
+  const [editingProfile, setEditingProfile] = useState<Profile | null>(null)
   const [toasts, setToasts] = useState<ToastMessage[]>([])
   const [confirmState, setConfirmState] = useState<ConfirmState | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -71,9 +100,89 @@ function App(): JSX.Element {
     void loadProfiles()
   }, [loadProfiles])
 
-  // ────────────────────────────────────────────────────────────
-  // 导出
-  // ────────────────────────────────────────────────────────────
+  // ─── 激活档案 ─────────────────────────────────────────────────────────────────
+  const handleActivate = useCallback(
+    async (id: string) => {
+      try {
+        const activated = await api.activateProfile(id)
+        setActiveProfileId(activated.id)
+        addToast('success', `已激活档案「${activated.name}」`)
+      } catch (e) {
+        addToast('error', `激活失败：${(e as Error).message}`)
+      }
+    },
+    [addToast],
+  )
+
+  // ─── 删除档案 ─────────────────────────────────────────────────────────────────
+  const handleDelete = useCallback(
+    async (id: string) => {
+      try {
+        await api.deleteProfile(id)
+        // 若删除当前查看项，切换到列表第一项（按 createdAt 排序）
+        if (selectedProfileId === id) {
+          const remaining = profiles
+            .filter((p) => p.id !== id)
+            .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+          setSelectedProfileId(remaining.length > 0 ? remaining[0].id : null)
+        }
+        if (activeProfileId === id) {
+          setActiveProfileId(null)
+        }
+        await loadProfiles()
+        addToast('success', '档案已删除')
+      } catch (e) {
+        addToast('error', `删除失败：${(e as Error).message}`)
+      }
+    },
+    [profiles, selectedProfileId, activeProfileId, addToast, loadProfiles],
+  )
+
+  // ─── 新建档案 ─────────────────────────────────────────────────────────────────
+  const handleNew = useCallback(() => {
+    setEditingProfile(null)
+    setShowForm(true)
+  }, [])
+
+  // ─── 编辑档案 ─────────────────────────────────────────────────────────────────
+  const handleEdit = useCallback(
+    (id: string) => {
+      const profile = profiles.find((p) => p.id === id) ?? null
+      setEditingProfile(profile)
+      setShowForm(true)
+    },
+    [profiles],
+  )
+
+  // ─── 表单提交（新建 / 编辑） ────────────────────────────────────────────────────
+  const handleFormSubmit = useCallback(
+    async (data: RawProfile) => {
+      try {
+        if (editingProfile) {
+          await api.updateProfile(editingProfile.id, data)
+          addToast('success', '档案已更新')
+        } else {
+          const created = await api.createProfile(data)
+          setSelectedProfileId(created.id)
+          addToast('success', '档案已创建')
+        }
+        setShowForm(false)
+        setEditingProfile(null)
+        await loadProfiles()
+      } catch (e) {
+        addToast('error', `保存失败：${(e as Error).message}`)
+        throw e
+      }
+    },
+    [editingProfile, addToast, loadProfiles],
+  )
+
+  const handleFormCancel = useCallback(() => {
+    setShowForm(false)
+    setEditingProfile(null)
+  }, [])
+
+  // ─── 导出 ────────────────────────────────────────────────────────────────────
   const handleExport = useCallback(async () => {
     try {
       const rawProfiles = await api.exportProfiles()
@@ -93,16 +202,12 @@ function App(): JSX.Element {
     }
   }, [addToast])
 
-  // ────────────────────────────────────────────────────────────
-  // 导入：触发文件选择
-  // ────────────────────────────────────────────────────────────
+  // ─── 导入：触发文件选择 ──────────────────────────────────────────────────────
   const handleImportClick = useCallback(() => {
     fileInputRef.current?.click()
   }, [])
 
-  // ────────────────────────────────────────────────────────────
-  // 导入：执行（overwrite=true 时覆盖同名，false 时跳过同名）
-  // ────────────────────────────────────────────────────────────
+  // ─── 导入：执行（overwrite=true 时覆盖同名，false 时跳过同名） ────────────────
   const doImport = useCallback(
     async (toImport: RawProfile[], currentProfiles: Profile[], overwrite: boolean) => {
       let imported = 0
@@ -134,14 +239,11 @@ function App(): JSX.Element {
     [addToast, loadProfiles],
   )
 
-  // ────────────────────────────────────────────────────────────
-  // 导入：文件选择后处理
-  // ────────────────────────────────────────────────────────────
+  // ─── 导入：文件选择后处理 ────────────────────────────────────────────────────
   const handleFileChange = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0]
       if (!file) return
-      // 重置，允许再次选择同一文件
       e.target.value = ''
 
       try {
@@ -163,12 +265,10 @@ function App(): JSX.Element {
           return
         }
 
-        // 检测同名档案
-        const duplicates: DuplicateEntry[] = toImport
-          .flatMap((raw) => {
-            const existing = profiles.find((p) => p.name === raw.name)
-            return existing ? [{ name: raw.name, existingId: existing.id }] : []
-          })
+        const duplicates: DuplicateEntry[] = toImport.flatMap((raw) => {
+          const existing = profiles.find((p) => p.name === raw.name)
+          return existing ? [{ name: raw.name, existingId: existing.id }] : []
+        })
 
         if (duplicates.length > 0) {
           setConfirmState({ duplicates, toImport })
@@ -182,9 +282,7 @@ function App(): JSX.Element {
     [profiles, addToast, doImport],
   )
 
-  // ────────────────────────────────────────────────────────────
-  // 确认对话框：覆盖
-  // ────────────────────────────────────────────────────────────
+  // ─── 确认对话框：覆盖 ────────────────────────────────────────────────────────
   const handleConfirmOverwrite = useCallback(async () => {
     if (!confirmState) return
     const { toImport } = confirmState
@@ -193,41 +291,85 @@ function App(): JSX.Element {
     await doImport(toImport, snapshot, true)
   }, [confirmState, profiles, doImport])
 
-  // ────────────────────────────────────────────────────────────
-  // 确认对话框：取消（终止导入）
-  // ────────────────────────────────────────────────────────────
   const handleCancelOverwrite = useCallback(() => {
     setConfirmState(null)
   }, [])
 
+  // ─── 派生状态 ────────────────────────────────────────────────────────────────
+  const activeProfile = profiles.find((p) => p.id === activeProfileId) ?? null
+  const selectedProfile = profiles.find((p) => p.id === selectedProfileId) ?? null
+
   return (
-    <div className="flex h-screen bg-theme-bg text-theme-text">
-      {/* 侧边栏 */}
-      <div className="w-56 flex flex-col border-r border-theme-border">
-        <Sidebar
-          profiles={profiles}
-          activeProfileId={activeProfileId}
-          selectedProfileId={selectedProfileId}
-          onSelect={setSelectedProfileId}
-          onNew={() => {
-            /* TODO: 新建档案 */
-          }}
-          onImport={handleImportClick}
-          onExport={() => void handleExport()}
-        />
+    <div className="flex flex-col h-screen bg-theme-bg text-theme-text">
+      {/* ── Titlebar ─────────────────────────────────────────────────────────── */}
+      <header className="flex items-center justify-between px-4 py-2.5 border-b border-theme-border bg-theme-sidebar shrink-0">
+        <h1 className="text-sm font-semibold text-theme-text">CC Config GUI</h1>
+        {activeProfile ? (
+          <span className="text-xs px-2 py-0.5 rounded-full bg-theme-active-bg text-theme-active-text">
+            ● {activeProfile.name} 已激活
+          </span>
+        ) : (
+          <span className="text-xs text-theme-text-muted">未配置</span>
+        )}
+      </header>
+
+      {/* ── 主体：Sidebar + DetailPanel ──────────────────────────────────────── */}
+      <div className="flex flex-1 overflow-hidden">
+        <div className="w-56 shrink-0 border-r border-theme-border flex flex-col">
+          <Sidebar
+            profiles={profiles}
+            activeProfileId={activeProfileId}
+            selectedProfileId={selectedProfileId}
+            onSelect={setSelectedProfileId}
+            onNew={handleNew}
+          />
+        </div>
+
+        <main className="flex-1 overflow-hidden">
+          {selectedProfile ? (
+            <DetailPanel
+              profile={selectedProfile}
+              isActive={selectedProfile.id === activeProfileId}
+              onActivate={(id) => void handleActivate(id)}
+              onEdit={handleEdit}
+              onDelete={(id) => void handleDelete(id)}
+            />
+          ) : (
+            <div className="flex h-full items-center justify-center">
+              <p className="text-sm text-theme-text-muted">
+                {profiles.length > 0
+                  ? '选择左侧档案以查看详情'
+                  : '暂无档案，点击左侧「＋ 新建档案」开始'}
+              </p>
+            </div>
+          )}
+        </main>
       </div>
 
-      {/* 主内容区（占位） */}
-      <main className="flex-1 flex flex-col items-center justify-center gap-2">
-        <h1 className="text-3xl font-bold text-theme-text">CC Config GUI</h1>
-        <p className="text-theme-text-muted">
-          {profiles.length > 0
-            ? `共 ${profiles.length} 个档案`
-            : '暂无档案，点击左侧「＋ 新建档案」开始'}
-        </p>
-      </main>
+      {/* ── Toolbar ──────────────────────────────────────────────────────────── */}
+      <footer className="flex items-center justify-between px-4 py-2 border-t border-theme-border bg-theme-sidebar shrink-0">
+        <span className="text-xs text-theme-text-muted">配置写入 ~/.claude/settings.json</span>
+        <div className="flex gap-1">
+          <Tooltip content={importTooltipContent} width="w-80">
+            <button
+              className="px-2.5 py-1 text-xs text-theme-text-muted hover:text-theme-text hover:bg-theme-selected-bg rounded-md transition-colors"
+              onClick={handleImportClick}
+            >
+              ↑ 导入
+            </button>
+          </Tooltip>
+          <Tooltip content={exportTooltipContent} width="w-72">
+            <button
+              className="px-2.5 py-1 text-xs text-theme-text-muted hover:text-theme-text hover:bg-theme-selected-bg rounded-md transition-colors"
+              onClick={() => void handleExport()}
+            >
+              ↓ 导出
+            </button>
+          </Tooltip>
+        </div>
+      </footer>
 
-      {/* 隐藏的文件选择输入 */}
+      {/* ── 隐藏文件选择 ─────────────────────────────────────────────────────── */}
       <input
         ref={fileInputRef}
         type="file"
@@ -236,10 +378,28 @@ function App(): JSX.Element {
         onChange={(e) => void handleFileChange(e)}
       />
 
-      {/* Toast 通知 */}
+      {/* ── ProfileForm 弹窗 ─────────────────────────────────────────────────── */}
+      {showForm && (
+        <ProfileForm
+          initialValues={
+            editingProfile
+              ? {
+                  name: editingProfile.name,
+                  apiKey: editingProfile.apiKey,
+                  baseUrl: editingProfile.baseUrl,
+                  model: editingProfile.model,
+                }
+              : undefined
+          }
+          onSubmit={handleFormSubmit}
+          onCancel={handleFormCancel}
+        />
+      )}
+
+      {/* ── Toast 通知 ───────────────────────────────────────────────────────── */}
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />
 
-      {/* 同名档案确认对话框 */}
+      {/* ── 同名档案确认对话框 ────────────────────────────────────────────────── */}
       {confirmState && (
         <ConfirmDialog
           title="发现同名档案"
