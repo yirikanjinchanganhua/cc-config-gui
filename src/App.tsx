@@ -43,7 +43,7 @@ interface ConfirmState {
 
 function App(): JSX.Element {
   const [profiles, setProfiles] = useState<Profile[]>([])
-  const [activeProfileId, setActiveProfileId] = useState<string | null>(null)
+  const [activeProfileId] = useState<string | null>(null)
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null)
   const [toasts, setToasts] = useState<ToastMessage[]>([])
   const [confirmState, setConfirmState] = useState<ConfirmState | null>(null)
