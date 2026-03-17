@@ -1,3 +1,25 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Light mode (default) */
+:root {
+  --color-bg: #ffffff;
+  --color-sidebar: #f8fafc;
+  --color-active-btn-bg: #dcfce7;
+  --color-active-btn-text: #15803d;
+  --color-text: #111827;
+  --color-text-muted: #6b7280;
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #111827;
+    --color-sidebar: #0d1520;
+    --color-active-btn-bg: #166534;
+    --color-active-btn-text: #86efac;
+    --color-text: #f9fafb;
+    --color-text-muted: #9ca3af;
+  }
+}

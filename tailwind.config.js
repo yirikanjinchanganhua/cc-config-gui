@@ -5,7 +5,16 @@ export default {
     './src/**/*.{js,ts,jsx,tsx}'
   ],
   theme: {
-    extend: {}
+    extend: {
+      colors: {
+        'theme-bg': 'var(--color-bg)',
+        'theme-sidebar': 'var(--color-sidebar)',
+        'theme-active-bg': 'var(--color-active-btn-bg)',
+        'theme-active-text': 'var(--color-active-btn-text)',
+        'theme-text': 'var(--color-text)',
+        'theme-text-muted': 'var(--color-text-muted)',
+      }
+    }
   },
   plugins: []
 }
