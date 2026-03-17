@@ -1,8 +1,8 @@
 /** @type {import('electron-builder').Configuration} */
 export default {
-  appId: 'com.cc.config-gui',
-  productName: 'CC Config GUI',
-  copyright: 'Copyright © 2024 CC',
+  appId: 'com.developer.cc-config-manager',
+  productName: 'CC Config Manager',
+  copyright: 'Copyright © 2024',
   directories: {
     buildResources: 'resources',
     output: 'dist'
@@ -18,11 +18,14 @@ export default {
         arch: ['arm64', 'x64']
       }
     ],
+    category: 'public.app-category.developer-tools',
+    icon: 'resources/icon.icns',
     artifactName: '${productName}-${version}-${arch}.${ext}',
-    category: 'public.app-category.utilities'
+    notarize: false,
+    identity: null
   },
   dmg: {
-    title: '${productName} ${version}',
+    title: 'CC Config Manager',
     artifactName: '${productName}-${version}-${arch}.${ext}'
   },
   nsis: {

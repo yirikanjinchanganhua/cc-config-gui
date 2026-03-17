@@ -11,6 +11,7 @@
     "build": "electron-vite build",
     "preview": "electron-vite preview",
     "build:mac": "npm run build && electron-builder --mac",
+    "dist": "npm run build && electron-builder --mac",
     "typecheck": "npm run typecheck:node && npm run typecheck:web",
     "dev:web": "tsx server/index.ts",
     "typecheck:node": "tsc --noEmit -p tsconfig.node.json --composite false",
