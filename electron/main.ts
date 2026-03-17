@@ -132,7 +132,8 @@ function registerIpcHandlers(): void {
             return
           }
 
-          const url = `${profile.baseUrl.replace(/\/$/, '')}/v1/models`
+          const base = profile.baseUrl.replace(/\/$/, '')
+          const url = base.endsWith('/v1') ? `${base}/models` : `${base}/v1/models`
           const start = Date.now()
 
           const request = net.request({
