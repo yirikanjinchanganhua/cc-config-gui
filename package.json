@@ -1,9 +1,9 @@
 {
   "name": "cc-config-gui",
   "version": "1.0.0",
-  "description": "CashCat Config GUI - Electron App",
+  "description": "CC Config GUI - Electron App",
   "main": "./out/main/index.js",
-  "author": "CashCat",
+  "author": "CC",
   "private": true,
   "type": "module",
   "scripts": {

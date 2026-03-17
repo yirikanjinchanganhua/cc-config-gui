@@ -1,8 +1,8 @@
 /** @type {import('electron-builder').Configuration} */
 export default {
-  appId: 'com.cashcat.config-gui',
-  productName: 'CashCat Config GUI',
-  copyright: 'Copyright © 2024 CashCat',
+  appId: 'com.cc.config-gui',
+  productName: 'CC Config GUI',
+  copyright: 'Copyright © 2024 CC',
   directories: {
     buildResources: 'resources',
     output: 'dist'
