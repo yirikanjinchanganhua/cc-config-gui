@@ -1,0 +1,25 @@
+# 构建产物
+dist/
+out/
+node_modules/
+
+# 开发工具
+.superpowers/
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 日志
+*.log
+npm-debug.log*
+
+# 环境变量
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
