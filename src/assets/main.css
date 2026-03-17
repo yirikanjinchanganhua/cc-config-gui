@@ -10,6 +10,8 @@
   --color-active-btn-text: #15803d;
   --color-text: #111827;
   --color-text-muted: #6b7280;
+  --color-selected-bg: #e2e8f0;
+  --color-border: #e5e7eb;
 }
 
 /* Dark mode */
@@ -21,5 +23,7 @@
     --color-active-btn-text: #86efac;
     --color-text: #f9fafb;
     --color-text-muted: #9ca3af;
+    --color-selected-bg: #1e293b;
+    --color-border: #374151;
   }
 }

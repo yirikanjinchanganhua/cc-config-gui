@@ -13,6 +13,8 @@ export default {
         'theme-active-text': 'var(--color-active-btn-text)',
         'theme-text': 'var(--color-text)',
         'theme-text-muted': 'var(--color-text-muted)',
+        'theme-selected-bg': 'var(--color-selected-bg)',
+        'theme-border': 'var(--color-border)',
       }
     }
   },
