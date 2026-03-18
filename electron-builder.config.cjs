@@ -1,5 +1,5 @@
 /** @type {import('electron-builder').Configuration} */
-export default {
+module.exports = {
   appId: 'com.developer.cc-config-manager',
   productName: 'CC Config Manager',
   copyright: 'Copyright © 2024',
