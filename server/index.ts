@@ -9,7 +9,12 @@ import { createServer } from 'net';
 import { nanoid } from 'nanoid';
 import { getStore, saveStore } from '../src/lib/storage';
 import { upsertEnv } from '../src/lib/settings';
-import type { RawProfile, Profile, ConnectivityResult } from '../src/lib/types';
+import type {
+    RawProfile,
+    Profile,
+    ConnectivityResult,
+    ApiStyle,
+} from '../src/lib/types';
 
 const HOST = '127.0.0.1';
 const PORT_MIN = 3001;
@@ -36,13 +41,87 @@ async function findPort(): Promise<number> {
     process.exit(1);
 }
 
-/** 构造 GET /v1/models 完整 URL，兼容 baseUrl 含 /v1 后缀的情况 */
-function buildModelsUrl(baseUrl: string): string {
-    const base = baseUrl.replace(/\/+$/, '');
-    return base;
+/**
+ * 根据 baseUrl 自动推断 API 风格：
+ * - 包含 anthropic.com → Anthropic 官方风格
+ * - 其他 → OpenAI 兼容风格
+ */
+function detectApiStyle(baseUrl: string): 'anthropic' | 'openai-compat' {
+    return baseUrl.includes('anthropic.com') ? 'anthropic' : 'openai-compat';
 }
 
-/** 连通性检测：向 {baseUrl}/v1/models 发起 GET，按状态码分类判断 */
+/**
+ * 解析最终使用的 API 风格（处理 'auto' 的情况）
+ */
+function resolveApiStyle(
+    style: ApiStyle | undefined,
+    baseUrl: string,
+): 'anthropic' | 'openai-compat' {
+    if (!style || style === 'auto') return detectApiStyle(baseUrl);
+    return style;
+}
+
+/**
+ * Anthropic 风格检测：GET {baseUrl}/v1/models
+ * Headers: x-api-key + anthropic-version
+ */
+async function checkAnthropicStyle(
+    baseUrl: string,
+    apiKey: string,
+    signal: AbortSignal,
+): Promise<Response> {
+    const base = baseUrl.replace(/\/+$/, '');
+    // 避免重复拼接 /v1
+    const url = base.endsWith('/v1') ? `${base}/models` : `${base}/v1/models`;
+    return fetch(url, {
+        method: 'GET',
+        headers: {
+            'x-api-key': apiKey,
+            'anthropic-version': '2023-06-01',
+        },
+        signal,
+    });
+}
+
+/**
+ * OpenAI 兼容风格检测：POST {baseUrl}/v1/chat/completions
+ * Headers: Authorization: Bearer {apiKey}
+ * Body: 最小化请求，max_tokens=1 降低费用
+ */
+async function checkOpenAICompatStyle(
+    baseUrl: string,
+    apiKey: string,
+    model: string,
+    signal: AbortSignal,
+): Promise<Response> {
+    const base = baseUrl.replace(/\/+$/, '');
+    const url = base.endsWith('/v1')
+        ? `${base}/chat/completions`
+        : `${base}/v1/chat/completions`;
+    return fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+            model,
+            messages: [{ role: 'user', content: 'hi' }],
+            max_tokens: 1,
+        }),
+        signal,
+    });
+}
+
+/** 将 HTTP 状态码映射为用户友好的错误描述 */
+function statusToError(status: number): string {
+    if (status === 401) return 'API Key 无效';
+    if (status === 403) return '无权限';
+    if (status === 404) return '地址不可达，请检查 Base URL';
+    return `请求失败（HTTP ${status}）`;
+}
+
+/** 连通性检测：根据 apiStyle 自动选择 Anthropic 或 OpenAI 兼容风格 */
 async function runConnectivityCheck(
     profileId: string,
 ): Promise<ConnectivityResult> {
@@ -52,7 +131,7 @@ async function runConnectivityCheck(
         return { ok: false, error: `Profile ${profileId} not found` };
     }
 
-    const url = buildModelsUrl(profile.baseUrl);
+    const resolvedStyle = resolveApiStyle(profile.apiStyle, profile.baseUrl);
     const start = Date.now();
 
     try {
@@ -61,14 +140,20 @@ async function runConnectivityCheck(
 
         let resp: Response;
         try {
-            resp = await fetch(url, {
-                method: 'GET',
-                headers: {
-                    'x-api-key': profile.apiKey,
-                    'anthropic-version': '2023-06-01',
-                },
-                signal: controller.signal,
-            });
+            if (resolvedStyle === 'anthropic') {
+                resp = await checkAnthropicStyle(
+                    profile.baseUrl,
+                    profile.apiKey,
+                    controller.signal,
+                );
+            } else {
+                resp = await checkOpenAICompatStyle(
+                    profile.baseUrl,
+                    profile.apiKey,
+                    profile.model,
+                    controller.signal,
+                );
+            }
         } finally {
             clearTimeout(timer);
         }
@@ -76,28 +161,7 @@ async function runConnectivityCheck(
         const latency = Date.now() - start;
         const status = resp.status;
 
-        if (status === 401)
-            return {
-                ok: false,
-                statusCode: status,
-                latency,
-                error: 'Key invalid',
-            };
-        if (status === 403)
-            return {
-                ok: false,
-                statusCode: status,
-                latency,
-                error: 'No permission',
-            };
-        if (status === 404)
-            return {
-                ok: false,
-                statusCode: status,
-                latency,
-                error: 'Unreachable',
-            };
-
+        // 2xx → 成功
         if (status >= 200 && status < 300) {
             try {
                 await resp.json();
@@ -107,16 +171,21 @@ async function runConnectivityCheck(
                     ok: false,
                     statusCode: status,
                     latency,
-                    error: 'Invalid JSON response',
+                    error: '响应体不是合法 JSON',
                 };
             }
         }
 
-        return { ok: false, statusCode: status, latency };
+        return {
+            ok: false,
+            statusCode: status,
+            latency,
+            error: statusToError(status),
+        };
     } catch (err: unknown) {
         const latency = Date.now() - start;
         if (err instanceof Error && err.name === 'AbortError') {
-            return { ok: false, latency, error: 'Timeout' };
+            return { ok: false, latency, error: '连接超时（10s）' };
         }
         return { ok: false, latency, error: String(err) };
     }
