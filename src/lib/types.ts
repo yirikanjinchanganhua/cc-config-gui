@@ -32,6 +32,8 @@ export interface RawProfile {
     model: string;
     /** API 风格，用于连通性检测时选择正确的请求方式，默认 'auto' */
     apiStyle?: ApiStyle;
+    /** 大模型厂商 */
+    provider?: Provider;
 }
 
 export interface ConnectivityResult {
@@ -57,3 +59,6 @@ export interface ProfileService {
     /** 按新顺序重排 profiles，入参为 id 数组（完整顺序） */
     reorderProfiles(orderedIds: string[]): Promise<void>;
 }
+
+/** 大模型厂商 */
+export type Provider = 'anthropic' | 'openai' | 'google' | 'deepseek' | 'alibaba' | 'zhipu' | 'moonshot' | 'other';
