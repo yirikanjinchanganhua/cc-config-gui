@@ -218,6 +218,39 @@ async function main(): Promise<void> {
 
     app.use(express.json());
 
+    // PUT /api/profiles/reorder → 按新顺序更新 order 字段（Body: { orderedIds: string[] }）
+    app.put('/api/profiles/reorder', (req, res) => {
+        try {
+            const { orderedIds } = req.body as { orderedIds: string[] };
+            if (!Array.isArray(orderedIds)) {
+                res.status(400).json({ error: 'orderedIds must be an array' });
+                return;
+            }
+            const store = getStore();
+            orderedIds.forEach((id, idx) => {
+                const p = store.profiles.find((p) => p.id === id);
+                if (p) p.order = idx;
+            });
+            saveStore(store);
+            res.status(204).send();
+        } catch (err) {
+            res.status(500).json({ error: String(err) });
+        }
+    });
+
+    // GET /api/store → 返回完整 ProfilesStore（含 activeProfileId）
+    app.get('/api/store', (_req, res) => {
+        try {
+            const store = getStore();
+            res.json({
+                activeProfileId: store.activeProfileId,
+                profiles: store.profiles,
+            });
+        } catch (err) {
+            res.status(500).json({ error: String(err) });
+        }
+    });
+
     // GET /api/profiles → 返回 Profile[]
     app.get('/api/profiles', (_req, res) => {
         try {

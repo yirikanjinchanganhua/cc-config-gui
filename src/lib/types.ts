@@ -15,6 +15,8 @@ export interface Profile {
     createdAt: string;
     /** API 风格，用于连通性检测时选择正确的请求方式，默认 'auto' */
     apiStyle?: ApiStyle;
+    /** 排序权重，数值越小越靠前；未设置时按 createdAt 排序 */
+    order?: number;
 }
 
 export interface ProfilesStore {
@@ -40,6 +42,8 @@ export interface ConnectivityResult {
 }
 
 export interface ProfileService {
+    /** 读取完整 Store（含 activeProfileId），用于初始化时同步激活状态 */
+    getStore(): Promise<ProfilesStore>;
     listProfiles(): Promise<Profile[]>;
     createProfile(raw: RawProfile): Promise<Profile>;
     updateProfile(id: string, raw: RawProfile): Promise<Profile>;
@@ -50,4 +54,6 @@ export interface ProfileService {
         profiles: RawProfile[],
     ): Promise<{ imported: number; skipped: number }>;
     exportProfiles(): Promise<RawProfile[]>;
+    /** 按新顺序重排 profiles，入参为 id 数组（完整顺序） */
+    reorderProfiles(orderedIds: string[]): Promise<void>;
 }

@@ -4,22 +4,38 @@
 
 /* Light mode (default) */
 :root {
-  --color-bg: #ffffff;
-  --color-sidebar: #f8fafc;
-  --color-active-btn-bg: #dcfce7;
-  --color-active-btn-text: #15803d;
-  --color-text: #111827;
-  --color-text-muted: #6b7280;
-  --color-selected-bg: #e2e8f0;
-  --color-border: #e5e7eb;
-  --color-tooltip-bg: #1f2937;
-  --color-tooltip-text: #f9fafb;
-  --color-tooltip-border: #374151;
+    --color-bg: #ffffff;
+    --color-sidebar: #f8fafc;
+    --color-active-btn-bg: #dcfce7;
+    --color-active-btn-text: #15803d;
+    --color-text: #111827;
+    --color-text-muted: #6b7280;
+    --color-selected-bg: #e2e8f0;
+    --color-border: #e5e7eb;
+    --color-tooltip-bg: #1f2937;
+    --color-tooltip-text: #f9fafb;
+    --color-tooltip-border: #374151;
 }
 
-/* Dark mode */
+/* Dark mode — 由 .dark class 控制（手动切换），同时兼容系统偏好作为初始默认值 */
 @media (prefers-color-scheme: dark) {
-  :root {
+    :root:not(.light) {
+        --color-bg: #111827;
+        --color-sidebar: #0d1520;
+        --color-active-btn-bg: #166534;
+        --color-active-btn-text: #86efac;
+        --color-text: #f9fafb;
+        --color-text-muted: #9ca3af;
+        --color-selected-bg: #1e293b;
+        --color-border: #374151;
+        --color-tooltip-bg: #374151;
+        --color-tooltip-text: #f9fafb;
+        --color-tooltip-border: #4b5563;
+    }
+}
+
+/* 手动切换：.dark class 强制 dark 变量 */
+:root.dark {
     --color-bg: #111827;
     --color-sidebar: #0d1520;
     --color-active-btn-bg: #166534;
@@ -31,5 +47,19 @@
     --color-tooltip-bg: #374151;
     --color-tooltip-text: #f9fafb;
     --color-tooltip-border: #4b5563;
-  }
+}
+
+/* 手动切换：.light class 强制 light 变量 */
+:root.light {
+    --color-bg: #ffffff;
+    --color-sidebar: #f8fafc;
+    --color-active-btn-bg: #dcfce7;
+    --color-active-btn-text: #15803d;
+    --color-text: #111827;
+    --color-text-muted: #6b7280;
+    --color-selected-bg: #e2e8f0;
+    --color-border: #e5e7eb;
+    --color-tooltip-bg: #1f2937;
+    --color-tooltip-text: #f9fafb;
+    --color-tooltip-border: #374151;
 }

@@ -131,9 +131,9 @@ export default function ProfileForm({
                 if (e.target === e.currentTarget) onCancel();
             }}
         >
-            <div className="w-full max-w-md bg-theme-bg rounded-xl shadow-2xl border border-theme-border flex flex-col">
-                {/* Header */}
-                <div className="flex items-center justify-between px-6 py-4 border-b border-theme-border">
+            <div className="w-full max-w-md bg-theme-bg rounded-xl shadow-2xl border border-theme-border flex flex-col max-h-[80vh]">
+                {/* Header — 固定不滚动 */}
+                <div className="flex items-center justify-between px-6 py-4 border-b border-theme-border shrink-0">
                     <h2 className="text-base font-semibold text-theme-text">
                         {isEditing ? '编辑档案' : '新建档案'}
                     </h2>
@@ -147,11 +147,12 @@ export default function ProfileForm({
                     </button>
                 </div>
 
-                {/* Form body */}
+                {/* Form body — 内容超长时内部滚动 */}
                 <form
+                    id="profile-form"
                     onSubmit={handleSubmit}
                     noValidate
-                    className="flex flex-col gap-4 px-6 py-5"
+                    className="flex flex-col gap-4 px-6 py-5 overflow-y-auto"
                 >
                     {/* 档案名称 */}
                     <div className="flex flex-col gap-1.5">
@@ -305,34 +306,35 @@ export default function ProfileForm({
                             ))}
                         </div>
                     </div>
-
-                    {/* Footer */}
-                    <div className="flex justify-end gap-3 pt-1">
-                        <button
-                            type="button"
-                            onClick={onCancel}
-                            className="px-4 py-2 text-sm rounded-lg border border-theme-border text-theme-text hover:bg-theme-selected-bg transition-colors"
-                        >
-                            取消
-                        </button>
-                        <button
-                            type="submit"
-                            disabled={submitting}
-                            className={[
-                                'px-4 py-2 text-sm rounded-lg font-medium transition-colors',
-                                submitting
-                                    ? 'bg-blue-400 text-white cursor-not-allowed'
-                                    : 'bg-blue-600 hover:bg-blue-700 text-white',
-                            ].join(' ')}
-                        >
-                            {submitting
-                                ? '保存中…'
-                                : isEditing
-                                  ? '保存更改'
-                                  : '新建'}
-                        </button>
-                    </div>
                 </form>
+
+                {/* Footer — 固定在底部，不参与滚动 */}
+                <div className="flex justify-end gap-3 px-6 py-4 border-t border-theme-border shrink-0">
+                    <button
+                        type="button"
+                        onClick={onCancel}
+                        className="px-4 py-2 text-sm rounded-lg border border-theme-border text-theme-text hover:bg-theme-selected-bg transition-colors"
+                    >
+                        取消
+                    </button>
+                    <button
+                        type="submit"
+                        form="profile-form"
+                        disabled={submitting}
+                        className={[
+                            'px-4 py-2 text-sm rounded-lg font-medium transition-colors',
+                            submitting
+                                ? 'bg-blue-400 text-white cursor-not-allowed'
+                                : 'bg-blue-600 hover:bg-blue-700 text-white',
+                        ].join(' ')}
+                    >
+                        {submitting
+                            ? '保存中…'
+                            : isEditing
+                              ? '保存更改'
+                              : '新建'}
+                    </button>
+                </div>
             </div>
         </div>
     );
