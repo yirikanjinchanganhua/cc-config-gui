@@ -40,6 +40,45 @@ function createWindow(): void {
 }
 
 function registerIpcHandlers(): void {
+    // profiles:reorder → 入参 { orderedIds: string[] }，按新顺序更新 order 字段
+    ipcMain.handle(
+        'profiles:reorder',
+        (
+            _event,
+            { orderedIds }: { orderedIds: string[] },
+        ): null | { error: string } => {
+            try {
+                const store = getStore();
+                orderedIds.forEach((id, idx) => {
+                    const p = store.profiles.find((p) => p.id === id);
+                    if (p) p.order = idx;
+                });
+                saveStore(store);
+                return null;
+            } catch (err) {
+                return { error: String(err) };
+            }
+        },
+    );
+
+    // store:get → 返回完整 ProfilesStore（含 activeProfileId）
+    ipcMain.handle(
+        'store:get',
+        ():
+            | { activeProfileId: string | null; profiles: Profile[] }
+            | { error: string } => {
+            try {
+                const store = getStore();
+                return {
+                    activeProfileId: store.activeProfileId,
+                    profiles: store.profiles,
+                };
+            } catch (err) {
+                return { error: String(err) };
+            }
+        },
+    );
+
     // profiles:list → 返回 Profile[]
     ipcMain.handle('profiles:list', (): Profile[] | { error: string } => {
         try {
