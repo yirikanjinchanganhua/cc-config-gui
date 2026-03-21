@@ -1,6 +1,26 @@
 import { useState, useRef, useCallback } from 'react';
 import type { Profile } from '../lib/types';
 
+// Provider 彩色头像配置
+const PROVIDER_AVATAR: Record<string, { initial: string; color: string }> = {
+    anthropic: { initial: 'A', color: '#D97706' },
+    openai:    { initial: 'O', color: '#111827' },
+    deepseek:  { initial: 'D', color: '#2563EB' },
+    google:    { initial: 'G', color: '#DC2626' },
+    qianwen:   { initial: 'Q', color: '#7C3AED' },
+    zhipu:     { initial: 'Z', color: '#059669' },
+    moonshot:  { initial: 'M', color: '#4F46E5' },
+    other:     { initial: '?', color: '#6B7280' },
+};
+
+function getAvatar(provider?: string, name?: string) {
+    const key = provider ?? 'other';
+    const cfg = PROVIDER_AVATAR[key] ?? PROVIDER_AVATAR.other;
+    // 若 provider 未知，用档案名首字母
+    const initial = cfg.initial === '?' && name ? name[0].toUpperCase() : cfg.initial;
+    return { initial, color: cfg.color };
+}
+
 interface SidebarProps {
     profiles: Profile[];
     activeProfileId: string | null;
@@ -11,66 +31,45 @@ interface SidebarProps {
 }
 
 export default function Sidebar({
-    profiles,
-    activeProfileId,
-    selectedProfileId,
-    onSelect,
-    onNew,
-    onReorder,
+    profiles, activeProfileId, selectedProfileId, onSelect, onNew, onReorder,
 }: SidebarProps): JSX.Element {
-    // 按 order 字段排序，order 未设置时按 createdAt 排序
     const sorted = [...profiles].sort((a, b) => {
         const ao = a.order ?? Infinity;
         const bo = b.order ?? Infinity;
         if (ao !== bo) return ao - bo;
-        return (
-            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-        );
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
     });
 
     const [dragOverId, setDragOverId] = useState<string | null>(null);
     const dragIdRef = useRef<string | null>(null);
 
-    const handleDragStart = useCallback(
-        (e: React.DragEvent<HTMLLIElement>, id: string) => {
-            dragIdRef.current = id;
-            e.dataTransfer.effectAllowed = 'move';
-        },
-        [],
-    );
-
-    const handleDragOver = useCallback(
-        (e: React.DragEvent<HTMLLIElement>, id: string) => {
-            e.preventDefault();
-            e.dataTransfer.dropEffect = 'move';
-            if (dragIdRef.current !== id) setDragOverId(id);
-        },
-        [],
-    );
-
-    const handleDragLeave = useCallback(() => {
-        setDragOverId(null);
+    const handleDragStart = useCallback((e: React.DragEvent<HTMLLIElement>, id: string) => {
+        dragIdRef.current = id;
+        e.dataTransfer.effectAllowed = 'move';
     }, []);
 
-    const handleDrop = useCallback(
-        (e: React.DragEvent<HTMLLIElement>, targetId: string) => {
-            e.preventDefault();
-            setDragOverId(null);
-            const sourceId = dragIdRef.current;
-            if (!sourceId || sourceId === targetId) return;
+    const handleDragOver = useCallback((e: React.DragEvent<HTMLLIElement>, id: string) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        if (dragIdRef.current !== id) setDragOverId(id);
+    }, []);
 
-            const ids = sorted.map((p) => p.id);
-            const fromIdx = ids.indexOf(sourceId);
-            const toIdx = ids.indexOf(targetId);
-            if (fromIdx === -1 || toIdx === -1) return;
+    const handleDragLeave = useCallback(() => { setDragOverId(null); }, []);
 
-            const newIds = [...ids];
-            newIds.splice(fromIdx, 1);
-            newIds.splice(toIdx, 0, sourceId);
-            onReorder(newIds);
-        },
-        [sorted, onReorder],
-    );
+    const handleDrop = useCallback((e: React.DragEvent<HTMLLIElement>, targetId: string) => {
+        e.preventDefault();
+        setDragOverId(null);
+        const sourceId = dragIdRef.current;
+        if (!sourceId || sourceId === targetId) return;
+        const ids = sorted.map((p) => p.id);
+        const fromIdx = ids.indexOf(sourceId);
+        const toIdx = ids.indexOf(targetId);
+        if (fromIdx === -1 || toIdx === -1) return;
+        const newIds = [...ids];
+        newIds.splice(fromIdx, 1);
+        newIds.splice(toIdx, 0, sourceId);
+        onReorder(newIds);
+    }, [sorted, onReorder]);
 
     const handleDragEnd = useCallback(() => {
         dragIdRef.current = null;
@@ -78,21 +77,25 @@ export default function Sidebar({
     }, []);
 
     return (
-        <aside className="flex flex-col h-full bg-theme-sidebar">
-            <div className="px-3 py-3 text-xs font-semibold text-theme-text-muted uppercase tracking-wider">
-                档案列表
+        <aside className="flex flex-col h-full">
+            {/* Section header */}
+            <div className="px-[14px] pt-[10px] pb-[5px] text-[10px] font-semibold text-theme-text-faint uppercase tracking-[0.6px]">
+                档案
             </div>
 
-            <ul className="flex-1 overflow-y-auto overflow-x-hidden">
+            {/* Profile list */}
+            <ul className="flex-1 overflow-y-auto overflow-x-hidden px-[6px] py-[2px]"
+                style={{ scrollbarWidth: 'none' }}>
                 {sorted.map((profile) => {
-                    const isActive = profile.id === activeProfileId;
+                    const isActive   = profile.id === activeProfileId;
                     const isSelected = profile.id === selectedProfileId;
                     const isDragOver = profile.id === dragOverId;
+                    const { initial, color } = getAvatar(profile.provider, profile.name);
 
                     return (
                         <li
                             key={profile.id}
-                            className="min-w-0"
+                            className="min-w-0 mb-[1px]"
                             draggable
                             onDragStart={(e) => handleDragStart(e, profile.id)}
                             onDragOver={(e) => handleDragOver(e, profile.id)}
@@ -101,54 +104,75 @@ export default function Sidebar({
                             onDragEnd={handleDragEnd}
                         >
                             <button
-                                className={[
-                                    'w-full min-w-0 text-left px-3 py-2.5 flex flex-col gap-0.5',
-                                    'border-l-2 transition-colors',
-                                    isActive
-                                        ? 'border-blue-500'
-                                        : 'border-transparent',
-                                    isDragOver
-                                        ? 'bg-theme-selected-bg opacity-50 border-t-2 border-t-blue-400'
-                                        : isSelected
-                                          ? 'bg-theme-selected-bg'
-                                          : 'hover:bg-theme-selected-bg',
-                                ].join(' ')}
                                 onClick={() => onSelect(profile.id)}
+                                className={[
+                                    'w-full min-w-0 text-left flex items-center gap-[8px]',
+                                    'px-[8px] py-[7px] rounded-[9px] transition-colors duration-100',
+                                    'border relative',
+                                    isDragOver
+                                        ? 'opacity-50'
+                                        : isSelected
+                                            ? 'border-theme-selected'
+                                            : 'border-transparent hover:bg-theme-hover',
+                                ].join(' ')}
+                                style={isSelected ? {
+                                    background: 'var(--color-selected)',
+                                    borderColor: 'var(--color-selected-border)',
+                                } : {}}
                             >
-                                <div className="flex items-center justify-between gap-2 min-w-0">
-                                    <div className="flex items-center gap-1.5 min-w-0">
-                                        {/* 拖拽把手 */}
-                                        <span
-                                            className="shrink-0 text-theme-text-muted opacity-30 cursor-grab active:cursor-grabbing select-none text-sm leading-none"
-                                            title="拖拽排序"
-                                        >
-                                            ⠿
-                                        </span>
-                                        <span className="text-sm font-medium text-theme-text truncate min-w-0">
+                                {/* Active left bar */}
+                                {isActive && (
+                                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[16px] rounded-r-[2px]"
+                                        style={{ background: 'var(--color-accent)' }} />
+                                )}
+
+                                {/* Drag handle */}
+                                <span className="shrink-0 text-theme-text-faint opacity-40 cursor-grab active:cursor-grabbing select-none text-[11px] leading-none">
+                                    ⠿
+                                </span>
+
+                                {/* Provider avatar */}
+                                <div className="w-[26px] h-[26px] rounded-[7px] shrink-0 flex items-center justify-center text-[11px] font-bold text-white leading-none"
+                                    style={{ background: color, boxShadow: '0 1px 3px rgba(0,0,0,0.18)' }}>
+                                    {initial}
+                                </div>
+
+                                {/* Info */}
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center justify-between gap-1.5 min-w-0">
+                                        <span className="text-[12.5px] font-medium text-theme-text truncate tracking-[-0.2px]">
                                             {profile.name}
                                         </span>
+                                        {isActive && (
+                                            <span className="shrink-0 text-[9.5px] font-semibold px-[6px] py-[1px] rounded-full"
+                                                style={{ background: 'var(--color-active-btn-bg)', color: 'var(--color-active-btn-text)' }}>
+                                                激活
+                                            </span>
+                                        )}
                                     </div>
-                                    {isActive && (
-                                        <span className="shrink-0 text-xs text-theme-active-text bg-theme-active-bg px-1.5 py-0.5 rounded-full">
-                                            ● 当前激活
-                                        </span>
-                                    )}
+                                    <span className="text-[10.5px] text-theme-text-faint truncate block mt-[1px] font-mono">
+                                        {profile.baseUrl.replace(/^https?:\/\//, '')}
+                                    </span>
                                 </div>
-                                <span className="text-xs text-theme-text-muted truncate w-full pl-4">
-                                    {profile.baseUrl}
-                                </span>
                             </button>
                         </li>
                     );
                 })}
             </ul>
 
-            <div className="p-3 border-t border-theme-border">
+            {/* New profile button */}
+            <div className="p-[8px] border-t border-theme-separator">
                 <button
-                    className="w-full py-2 text-sm text-theme-text-muted hover:text-theme-text hover:bg-theme-selected-bg rounded-lg transition-colors"
                     onClick={onNew}
+                    className="w-full py-[7px] rounded-[9px] text-[12.5px] font-medium text-theme-text-muted hover:text-theme-accent transition-colors duration-150 flex items-center justify-center gap-[5px]"
+                    style={{ border: '1px dashed var(--color-separator)' }}
+                    onMouseEnter={(e) => (e.currentTarget.style.borderColor = 'var(--color-accent)')}
+                    onMouseLeave={(e) => (e.currentTarget.style.borderColor = 'var(--color-separator)')}
                 >
-                    ＋ 新建档案
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                        <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+                    </svg>
+                    新建档案
                 </button>
             </div>
         </aside>

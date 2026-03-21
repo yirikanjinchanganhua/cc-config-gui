@@ -16,8 +16,16 @@ function createWindow(): void {
     const mainWindow = new BrowserWindow({
         width: 900,
         height: 670,
+        minWidth: 780,
+        minHeight: 520,
         show: false,
         autoHideMenuBar: true,
+        transparent: true,
+        vibrancy: 'under-window',
+        visualEffectState: 'active',
+        titleBarStyle: 'hiddenInset',
+        trafficLightPosition: { x: 14, y: 13 },
+        backgroundColor: '#00000000',
         webPreferences: {
             preload: join(__dirname, '../preload/preload.mjs'),
             sandbox: false,
