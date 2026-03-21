@@ -62,3 +62,70 @@ export interface ProfileService {
 
 /** 大模型厂商 */
 export type Provider = 'anthropic' | 'openai' | 'google' | 'deepseek' | 'alibaba' | 'zhipu' | 'moonshot' | 'other';
+
+// ─── Marketplace Types ───────────────────────────────────────────────────────
+
+/** marketplace.json 中 source 字段的四种格式 */
+export interface RemoteSource {
+    source: 'url';
+    url: string;
+    sha?: string;
+}
+
+export interface GitSubdirSource {
+    source: 'git-subdir';
+    url: string;
+    subdir: string;
+}
+
+export interface GithubSource {
+    source: 'github';
+    repo: string;
+}
+
+export type PluginSource = RemoteSource | GitSubdirSource | GithubSource | string;
+
+export interface MarketplacePlugin {
+    name: string;
+    description: string;
+    category?: string;
+    homepage?: string;
+    source: PluginSource;
+    skills?: MarketplaceSkill[];
+    cached?: boolean;
+}
+
+export interface MarketplaceSkill {
+    name: string;
+    description: string;
+    pluginName: string;
+    filePath: string;
+    supportFiles: string[];
+}
+
+export interface InstalledSkill {
+    name: string;
+    sourcePlugin: string;
+    installedAt: string;
+    files: string[];
+}
+
+export interface CustomSource {
+    id: string;
+    name: string;
+    gitUrl: string;
+    description?: string;
+}
+
+export interface MarketplaceService {
+    fetchPlugins(): Promise<MarketplacePlugin[]>;
+    cachePlugin(source: PluginSource): Promise<{ skills: MarketplaceSkill[] }>;
+    installSkill(pluginSource: PluginSource, skillName: string): Promise<{ success: boolean }>;
+    uninstallSkill(skillName: string): Promise<{ success: boolean }>;
+    getInstalledSkills(): Promise<InstalledSkill[]>;
+    getSkillDetails(skillPath: string): Promise<{ content: string }>;
+    refreshCache(): Promise<{ updated: number }>;
+    addSource(gitUrl: string, name: string): Promise<{ success: boolean }>;
+    removeSource(id: string): Promise<{ success: boolean }>;
+    importLocal(dirPath: string): Promise<{ installed: number }>;
+}

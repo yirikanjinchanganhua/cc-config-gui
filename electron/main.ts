@@ -4,6 +4,7 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import { nanoid } from 'nanoid';
 import { getStore, saveStore } from '../src/lib/storage';
 import { upsertEnv } from '../src/lib/settings';
+import { registerMarketplaceHandlers } from './marketplace';
 import type {
     RawProfile,
     Profile,
@@ -324,6 +325,7 @@ app.whenReady().then(() => {
     });
 
     registerIpcHandlers();
+    registerMarketplaceHandlers();
 
     createWindow();
 
