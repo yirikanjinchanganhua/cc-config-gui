@@ -9,11 +9,24 @@ import { createServer } from 'net';
 import { nanoid } from 'nanoid';
 import { getStore, saveStore } from '../src/lib/storage';
 import { upsertEnv } from '../src/lib/settings';
+import {
+    fetchPlugins,
+    cachePlugin,
+    installSkill,
+    uninstallSkill,
+    getInstalledSkills,
+    getSkillDetails,
+    refreshCache,
+    addSource,
+    removeSource,
+    importLocal,
+} from '../electron/marketplace-service';
 import type {
     RawProfile,
     Profile,
     ConnectivityResult,
     ApiStyle,
+    PluginSource,
 } from '../src/lib/types';
 
 const HOST = '127.0.0.1';
@@ -357,6 +370,125 @@ async function main(): Promise<void> {
                 return;
             }
             const result = await runConnectivityCheck(profileId);
+            res.json(result);
+        } catch (err) {
+            res.status(500).json({ error: String(err) });
+        }
+    });
+
+    // ─── Marketplace API ────────────────────────────────────────────────────────
+
+    // GET /api/marketplace/plugins → 获取插件列表
+    app.get('/api/marketplace/plugins', async (_req, res) => {
+        try {
+            const plugins = await fetchPlugins();
+            res.json(plugins);
+        } catch (err) {
+            res.status(500).json({ error: String(err) });
+        }
+    });
+
+    // POST /api/marketplace/cache-plugin → 缓存插件并获取 Skill 列表
+    app.post('/api/marketplace/cache-plugin', async (req, res) => {
+        try {
+            const { source } = req.body as { source: PluginSource };
+            const result = await cachePlugin(source);
+            res.json(result);
+        } catch (err) {
+            res.status(500).json({ error: String(err) });
+        }
+    });
+
+    // POST /api/marketplace/install → 安装 Skill
+    app.post('/api/marketplace/install', async (req, res) => {
+        try {
+            const { pluginSource, skillName } = req.body as {
+                pluginSource: PluginSource;
+                skillName: string;
+            };
+            const result = await installSkill(pluginSource, skillName);
+            res.json(result);
+        } catch (err) {
+            res.status(500).json({ error: String(err) });
+        }
+    });
+
+    // POST /api/marketplace/uninstall → 卸载 Skill
+    app.post('/api/marketplace/uninstall', async (req, res) => {
+        try {
+            const { skillName } = req.body as { skillName: string };
+            const result = await uninstallSkill(skillName);
+            res.json(result);
+        } catch (err) {
+            res.status(500).json({ error: String(err) });
+        }
+    });
+
+    // GET /api/marketplace/installed → 获取已安装 Skills
+    app.get('/api/marketplace/installed', async (_req, res) => {
+        try {
+            const skills = await getInstalledSkills();
+            res.json(skills);
+        } catch (err) {
+            res.status(500).json({ error: String(err) });
+        }
+    });
+
+    // GET /api/marketplace/details?skillPath=xxx → 获取 Skill 详情
+    app.get('/api/marketplace/details', async (req, res) => {
+        try {
+            const skillPath = req.query.skillPath as string;
+            if (!skillPath) {
+                res.status(400).json({ error: 'skillPath is required' });
+                return;
+            }
+            const result = await getSkillDetails(skillPath);
+            res.json(result);
+        } catch (err) {
+            res.status(500).json({ error: String(err) });
+        }
+    });
+
+    // POST /api/marketplace/refresh → 刷新缓存
+    app.post('/api/marketplace/refresh', async (_req, res) => {
+        try {
+            const result = await refreshCache();
+            res.json(result);
+        } catch (err) {
+            res.status(500).json({ error: String(err) });
+        }
+    });
+
+    // POST /api/marketplace/add-source → 添加自定义源
+    app.post('/api/marketplace/add-source', async (req, res) => {
+        try {
+            const { gitUrl, name } = req.body as {
+                gitUrl: string;
+                name: string;
+            };
+            const result = await addSource(gitUrl, name);
+            res.json(result);
+        } catch (err) {
+            res.status(500).json({ error: String(err) });
+        }
+    });
+
+    // POST /api/marketplace/remove-source → 移除自定义源
+    app.post('/api/marketplace/remove-source', async (req, res) => {
+        try {
+            const { id } = req.body as { id: string };
+            const result = await removeSource(id);
+            res.json(result);
+        } catch (err) {
+            res.status(500).json({ error: String(err) });
+        }
+    });
+
+    // POST /api/marketplace/import-local → 从本地目录导入
+    app.post('/api/marketplace/import-local', async (req, res) => {
+        try {
+            const { dirPath } = req.body as { dirPath: string };
+            const result = await importLocal(dirPath);
             res.json(result);
         } catch (err) {
             res.status(500).json({ error: String(err) });

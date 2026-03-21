@@ -6,6 +6,8 @@ import ProfileForm from './components/ProfileForm';
 import InfoModal from './components/InfoModal';
 import { ToastContainer, type ToastMessage } from './components/Toast';
 import ConfirmDialog from './components/ConfirmDialog';
+import TabBar from './components/TabBar';
+import Marketplace from './components/marketplace/Marketplace';
 import { api } from './lib/api-client';
 import type { Profile, RawProfile } from './lib/types';
 
@@ -61,6 +63,7 @@ function App(): JSX.Element {
     const [infoModal, setInfoModal] = useState<'import' | 'export' | null>(
         null,
     );
+    const [activeTab, setActiveTab] = useState<'config' | 'marketplace'>('config');
 
     // ─── 主题切换（三态：dark / light / system）────────────────────────────────
     const getInitialTheme = (): 'dark' | 'light' | 'system' => {
@@ -392,78 +395,94 @@ function App(): JSX.Element {
                 )}
             </header>
 
-            {/* ── 主体：Sidebar + DetailPanel ──────────────────────────────────────── */}
-            <div className="flex flex-1 overflow-hidden">
-                <div className="w-56 shrink-0 border-r border-theme-border flex flex-col">
-                    <Sidebar
-                        profiles={profiles}
-                        activeProfileId={activeProfileId}
-                        selectedProfileId={selectedProfileId}
-                        onSelect={setSelectedProfileId}
-                        onNew={handleNew}
-                        onReorder={(ids) => void handleReorder(ids)}
-                    />
-                </div>
+            {/* ── TabBar ────────────────────────────────────────────────────────────── */}
+            <TabBar activeTab={activeTab} onTabChange={setActiveTab} />
 
-                <main className="flex-1 overflow-hidden">
-                    {selectedProfile ? (
-                        <DetailPanel
-                            profile={selectedProfile}
-                            isActive={selectedProfile.id === activeProfileId}
-                            onActivate={(id) => void handleActivate(id)}
-                            onEdit={handleEdit}
-                            onDelete={(id) => void handleDelete(id)}
-                        />
-                    ) : (
-                        <div className="flex h-full items-center justify-center">
-                            <p className="text-sm text-theme-text-muted">
-                                {profiles.length > 0
-                                    ? '选择左侧档案以查看详情'
-                                    : '暂无档案，点击左侧「＋ 新建档案」开始'}
-                            </p>
+            {/* ── 内容区 ────────────────────────────────────────────────────────────── */}
+            {activeTab === 'config' ? (
+                <>
+                    {/* ── 主体：Sidebar + DetailPanel ─────────────────────────────────── */}
+                    <div className="flex flex-1 overflow-hidden">
+                        <div className="w-56 shrink-0 border-r border-theme-border flex flex-col">
+                            <Sidebar
+                                profiles={profiles}
+                                activeProfileId={activeProfileId}
+                                selectedProfileId={selectedProfileId}
+                                onSelect={setSelectedProfileId}
+                                onNew={handleNew}
+                                onReorder={(ids) => void handleReorder(ids)}
+                            />
                         </div>
-                    )}
-                </main>
-            </div>
 
-            {/* ── Toolbar ──────────────────────────────────────────────────────────── */}
-            <footer className="flex items-center justify-between px-4 py-2 border-t border-theme-border bg-theme-sidebar shrink-0">
-                <span className="text-xs text-theme-text-muted">
-                    配置写入 ~/.claude/settings.json
-                </span>
-                <div className="flex gap-1">
-                    <div className="flex items-center gap-0.5">
-                        <button
-                            className="px-2.5 py-1 text-xs text-theme-text-muted hover:text-theme-text hover:bg-theme-selected-bg rounded-md transition-colors"
-                            onClick={handleImportClick}
-                        >
-                            ↑ 导入
-                        </button>
-                        <button
-                            className="w-4 h-4 flex items-center justify-center text-[10px] text-theme-text-muted hover:text-theme-text hover:bg-theme-selected-bg rounded-full transition-colors"
-                            onClick={() => setInfoModal('import')}
-                            aria-label="导入说明"
-                        >
-                            ?
-                        </button>
+                        <main className="flex-1 overflow-hidden">
+                            {selectedProfile ? (
+                                <DetailPanel
+                                    profile={selectedProfile}
+                                    isActive={
+                                        selectedProfile.id === activeProfileId
+                                    }
+                                    onActivate={(id) =>
+                                        void handleActivate(id)
+                                    }
+                                    onEdit={handleEdit}
+                                    onDelete={(id) => void handleDelete(id)}
+                                />
+                            ) : (
+                                <div className="flex h-full items-center justify-center">
+                                    <p className="text-sm text-theme-text-muted">
+                                        {profiles.length > 0
+                                            ? '选择左侧档案以查看详情'
+                                            : '暂无档案，点击左侧「＋ 新建档案」开始'}
+                                    </p>
+                                </div>
+                            )}
+                        </main>
                     </div>
-                    <div className="flex items-center gap-0.5">
-                        <button
-                            className="px-2.5 py-1 text-xs text-theme-text-muted hover:text-theme-text hover:bg-theme-selected-bg rounded-md transition-colors"
-                            onClick={() => void handleExport()}
-                        >
-                            ↓ 导出
-                        </button>
-                        <button
-                            className="w-4 h-4 flex items-center justify-center text-[10px] text-theme-text-muted hover:text-theme-text hover:bg-theme-selected-bg rounded-full transition-colors"
-                            onClick={() => setInfoModal('export')}
-                            aria-label="导出说明"
-                        >
-                            ?
-                        </button>
-                    </div>
+
+                    {/* ── Toolbar ────────────────────────────────────────────────────── */}
+                    <footer className="flex items-center justify-between px-4 py-2 border-t border-theme-border bg-theme-sidebar shrink-0">
+                        <span className="text-xs text-theme-text-muted">
+                            配置写入 ~/.claude/settings.json
+                        </span>
+                        <div className="flex gap-1">
+                            <div className="flex items-center gap-0.5">
+                                <button
+                                    className="px-2.5 py-1 text-xs text-theme-text-muted hover:text-theme-text hover:bg-theme-selected-bg rounded-md transition-colors"
+                                    onClick={handleImportClick}
+                                >
+                                    ↑ 导入
+                                </button>
+                                <button
+                                    className="w-4 h-4 flex items-center justify-center text-[10px] text-theme-text-muted hover:text-theme-text hover:bg-theme-selected-bg rounded-full transition-colors"
+                                    onClick={() => setInfoModal('import')}
+                                    aria-label="导入说明"
+                                >
+                                    ?
+                                </button>
+                            </div>
+                            <div className="flex items-center gap-0.5">
+                                <button
+                                    className="px-2.5 py-1 text-xs text-theme-text-muted hover:text-theme-text hover:bg-theme-selected-bg rounded-md transition-colors"
+                                    onClick={() => void handleExport()}
+                                >
+                                    ↓ 导出
+                                </button>
+                                <button
+                                    className="w-4 h-4 flex items-center justify-center text-[10px] text-theme-text-muted hover:text-theme-text hover:bg-theme-selected-bg rounded-full transition-colors"
+                                    onClick={() => setInfoModal('export')}
+                                    aria-label="导出说明"
+                                >
+                                    ?
+                                </button>
+                            </div>
+                        </div>
+                    </footer>
+                </>
+            ) : (
+                <div className="flex-1 overflow-hidden">
+                    <Marketplace addToast={addToast} />
                 </div>
-            </footer>
+            )}
 
             {/* ── 隐藏文件选择 ─────────────────────────────────────────────────────── */}
             <input

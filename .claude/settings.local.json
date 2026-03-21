@@ -7,7 +7,20 @@
       "WebSearch",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(find ~/.claude/plugins/cache/claude-plugins-official/superpowers -name *.json -maxdepth 1)",
+      "Bash(open:*)",
+      "Bash(pkill -f \"python3 -m http.server 8765\")",
+      "WebFetch(domain:localhost)",
+      "Bash(curl -s http://localhost:58474/projects/7c101cfd-d7ac-474a-b8a4-0c8d886f7b46)",
+      "Bash(curl -s http://localhost:58474/api/projects/7c101cfd-d7ac-474a-b8a4-0c8d886f7b46)",
+      "Bash(python3 -m json.tool)",
+      "Bash(curl -s http://localhost:58474/api/projects)",
+      "Bash(curl -s http://localhost:58474/api/)",
+      "Bash(curl -s http://localhost:58474/api/v1/)",
+      "Bash(curl -s http://localhost:58474/v1/)",
+      "Bash(node:*)",
+      "Bash(python3:*)"
     ]
   }
 }
