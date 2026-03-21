@@ -2,64 +2,257 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Light mode (default) */
+/* ─── Light mode (default) ─────────────────────────────────────────────────── */
 :root {
-    --color-bg: #ffffff;
-    --color-sidebar: #f8fafc;
-    --color-active-btn-bg: #dcfce7;
-    --color-active-btn-text: #15803d;
-    --color-text: #111827;
-    --color-text-muted: #6b7280;
-    --color-selected-bg: #e2e8f0;
-    --color-border: #e5e7eb;
-    --color-tooltip-bg: #1f2937;
-    --color-tooltip-text: #f9fafb;
-    --color-tooltip-border: #374151;
+    /* Window background — transparent for vibrancy */
+    --color-bg: rgba(242, 242, 247, 0.38);
+    /* Main content canvas — subtle tint so wallpaper doesn't overpower */
+    --color-content-bg: rgba(238, 238, 243, 0.52);
+
+    /* Surface layers */
+    --color-header:  rgba(255, 255, 255, 0.65);
+    --color-sidebar: rgba(245, 245, 250, 0.58);
+    --color-card-bg: rgba(255, 255, 255, 0.72);
+    --color-card-border: rgba(255, 255, 255, 0.90);
+    --card-shadow: 0 1px 1px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.06), 0 0 0 0.5px rgba(0,0,0,0.06);
+
+    /* Input */
+    --color-input-bg: rgba(120, 120, 128, 0.08);
+    --color-input-border: rgba(60, 60, 67, 0.22);
+    --color-input-focus: #007AFF;
+
+    /* Text */
+    --color-text:       rgba(0, 0, 0, 0.88);
+    --color-text-muted: rgba(60, 60, 67, 0.60);
+    --color-text-faint: rgba(60, 60, 67, 0.36);
+
+    /* Lines */
+    --color-separator: rgba(60, 60, 67, 0.18);
+    --color-border:    rgba(60, 60, 67, 0.18);
+
+    /* States */
+    --color-hover:            rgba(0, 0, 0, 0.04);
+    --color-selected:         rgba(0, 122, 255, 0.10);
+    --color-selected-border:  rgba(0, 122, 255, 0.28);
+    --color-selected-bg:      rgba(0, 0, 0, 0.04);
+
+    /* Accent */
+    --color-accent:       #007AFF;
+    --color-accent-light: rgba(0, 122, 255, 0.12);
+
+    /* Semantic */
+    --color-green:    #34C759;
+    --color-green-bg: rgba(52, 199, 89, 0.12);
+    --color-red:      #FF3B30;
+
+    /* Active badge */
+    --color-active-btn-bg:   rgba(52, 199, 89, 0.13);
+    --color-active-btn-text: #1A8A35;
+    --color-active-dot:      #34C759;
+
+    /* Tooltip */
+    --color-tooltip-bg:     rgba(40, 40, 42, 0.92);
+    --color-tooltip-text:   rgba(255, 255, 255, 0.90);
+    --color-tooltip-border: rgba(255, 255, 255, 0.12);
+    /* Dropdown menu */
+    --color-menu-bg:        rgb(250, 250, 252);
+    --color-menu-text:      rgba(0, 0, 0, 0.85);
+    --color-menu-text-dim:  rgba(0, 0, 0, 0.45);
+    --color-menu-border:    rgba(0, 0, 0, 0.10);
+    --color-menu-divider:   rgba(0, 0, 0, 0.08);
+    --color-menu-hover:     rgba(0, 0, 0, 0.06);
 }
 
-/* Dark mode — 由 .dark class 控制（手动切换），同时兼容系统偏好作为初始默认值 */
+/* ─── Dark mode — 系统偏好 ───────────────────────────────────────────────────── */
 @media (prefers-color-scheme: dark) {
     :root:not(.light) {
-        --color-bg: #111827;
-        --color-sidebar: #0d1520;
-        --color-active-btn-bg: #166534;
-        --color-active-btn-text: #86efac;
-        --color-text: #f9fafb;
-        --color-text-muted: #9ca3af;
-        --color-selected-bg: #1e293b;
-        --color-border: #374151;
-        --color-tooltip-bg: #374151;
-        --color-tooltip-text: #f9fafb;
-        --color-tooltip-border: #4b5563;
+        --color-bg: rgba(22, 22, 24, 0.45);
+        --color-content-bg: rgba(18, 18, 20, 0.52);
+        --color-header:  rgba(28, 28, 30, 0.75);
+        --color-sidebar: rgba(28, 28, 30, 0.68);
+        --color-card-bg: rgba(44, 44, 46, 0.82);
+        --color-card-border: rgba(255, 255, 255, 0.08);
+        --card-shadow: 0 1px 1px rgba(0,0,0,0.15), 0 2px 8px rgba(0,0,0,0.22), 0 0 0 0.5px rgba(0,0,0,0.42);
+
+        --color-input-bg:     rgba(118, 118, 128, 0.14);
+        --color-input-border: rgba(84, 84, 88, 0.55);
+        --color-input-focus:  #0A84FF;
+
+        --color-text:       rgba(255, 255, 255, 0.92);
+        --color-text-muted: rgba(235, 235, 245, 0.55);
+        --color-text-faint: rgba(235, 235, 245, 0.28);
+
+        --color-separator: rgba(84, 84, 88, 0.50);
+        --color-border:    rgba(84, 84, 88, 0.50);
+
+        --color-hover:           rgba(255, 255, 255, 0.06);
+        --color-selected:        rgba(10, 132, 255, 0.18);
+        --color-selected-border: rgba(10, 132, 255, 0.38);
+        --color-selected-bg:     rgba(255, 255, 255, 0.06);
+
+        --color-accent:       #0A84FF;
+        --color-accent-light: rgba(10, 132, 255, 0.15);
+
+        --color-green:    #30D158;
+        --color-green-bg: rgba(48, 209, 88, 0.15);
+        --color-red:      #FF453A;
+
+        --color-active-btn-bg:   rgba(48, 209, 88, 0.15);
+        --color-active-btn-text: #30D158;
+        --color-active-dot:      #30D158;
+
+        --color-tooltip-bg:     rgba(58, 58, 60, 0.96);
+        --color-tooltip-text:   rgba(255, 255, 255, 0.90);
+        --color-tooltip-border: rgba(255, 255, 255, 0.10);
+        --color-menu-bg:        rgb(44, 44, 46);
+        --color-menu-text:      rgba(255, 255, 255, 0.90);
+        --color-menu-text-dim:  rgba(255, 255, 255, 0.45);
+        --color-menu-border:    rgba(255, 255, 255, 0.10);
+        --color-menu-divider:   rgba(255, 255, 255, 0.08);
+        --color-menu-hover:     rgba(255, 255, 255, 0.08);
     }
 }
 
-/* 手动切换：.dark class 强制 dark 变量 */
+/* ─── 手动 .dark ─────────────────────────────────────────────────────────────── */
 :root.dark {
-    --color-bg: #111827;
-    --color-sidebar: #0d1520;
-    --color-active-btn-bg: #166534;
-    --color-active-btn-text: #86efac;
-    --color-text: #f9fafb;
-    --color-text-muted: #9ca3af;
-    --color-selected-bg: #1e293b;
-    --color-border: #374151;
-    --color-tooltip-bg: #374151;
-    --color-tooltip-text: #f9fafb;
-    --color-tooltip-border: #4b5563;
+    --color-bg: rgba(22, 22, 24, 0.45);
+    --color-content-bg: rgba(18, 18, 20, 0.52);
+    --color-header:  rgba(28, 28, 30, 0.75);
+    --color-sidebar: rgba(28, 28, 30, 0.68);
+    --color-card-bg: rgba(44, 44, 46, 0.82);
+    --color-card-border: rgba(255, 255, 255, 0.08);
+    --card-shadow: 0 1px 1px rgba(0,0,0,0.15), 0 2px 8px rgba(0,0,0,0.22), 0 0 0 0.5px rgba(0,0,0,0.42);
+
+    --color-input-bg:     rgba(118, 118, 128, 0.14);
+    --color-input-border: rgba(84, 84, 88, 0.55);
+    --color-input-focus:  #0A84FF;
+
+    --color-text:       rgba(255, 255, 255, 0.92);
+    --color-text-muted: rgba(235, 235, 245, 0.55);
+    --color-text-faint: rgba(235, 235, 245, 0.28);
+
+    --color-separator: rgba(84, 84, 88, 0.50);
+    --color-border:    rgba(84, 84, 88, 0.50);
+
+    --color-hover:           rgba(255, 255, 255, 0.06);
+    --color-selected:        rgba(10, 132, 255, 0.18);
+    --color-selected-border: rgba(10, 132, 255, 0.38);
+    --color-selected-bg:     rgba(255, 255, 255, 0.06);
+
+    --color-accent:       #0A84FF;
+    --color-accent-light: rgba(10, 132, 255, 0.15);
+
+    --color-green:    #30D158;
+    --color-green-bg: rgba(48, 209, 88, 0.15);
+    --color-red:      #FF453A;
+
+    --color-active-btn-bg:   rgba(48, 209, 88, 0.15);
+    --color-active-btn-text: #30D158;
+    --color-active-dot:      #30D158;
+
+    --color-tooltip-bg:     rgba(58, 58, 60, 0.96);
+    --color-tooltip-text:   rgba(255, 255, 255, 0.90);
+    --color-tooltip-border: rgba(255, 255, 255, 0.10);
+    --color-menu-bg:        rgb(44, 44, 46);
+    --color-menu-text:      rgba(255, 255, 255, 0.90);
+    --color-menu-text-dim:  rgba(255, 255, 255, 0.45);
+    --color-menu-border:    rgba(255, 255, 255, 0.10);
+    --color-menu-divider:   rgba(255, 255, 255, 0.08);
+    --color-menu-hover:     rgba(255, 255, 255, 0.08);
 }
 
-/* 手动切换：.light class 强制 light 变量 */
+/* ─── 手动 .light ────────────────────────────────────────────────────────────── */
 :root.light {
-    --color-bg: #ffffff;
-    --color-sidebar: #f8fafc;
-    --color-active-btn-bg: #dcfce7;
-    --color-active-btn-text: #15803d;
-    --color-text: #111827;
-    --color-text-muted: #6b7280;
-    --color-selected-bg: #e2e8f0;
-    --color-border: #e5e7eb;
-    --color-tooltip-bg: #1f2937;
-    --color-tooltip-text: #f9fafb;
-    --color-tooltip-border: #374151;
+    --color-bg: rgba(242, 242, 247, 0.38);
+    --color-content-bg: rgba(238, 238, 243, 0.52);
+    --color-header:  rgba(255, 255, 255, 0.65);
+    --color-sidebar: rgba(245, 245, 250, 0.58);
+    --color-card-bg: rgba(255, 255, 255, 0.72);
+    --color-card-border: rgba(255, 255, 255, 0.90);
+    --card-shadow: 0 1px 1px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.06), 0 0 0 0.5px rgba(0,0,0,0.06);
+
+    --color-input-bg:     rgba(120, 120, 128, 0.08);
+    --color-input-border: rgba(60, 60, 67, 0.22);
+    --color-input-focus:  #007AFF;
+
+    --color-text:       rgba(0, 0, 0, 0.88);
+    --color-text-muted: rgba(60, 60, 67, 0.60);
+    --color-text-faint: rgba(60, 60, 67, 0.36);
+
+    --color-separator: rgba(60, 60, 67, 0.18);
+    --color-border:    rgba(60, 60, 67, 0.18);
+
+    --color-hover:           rgba(0, 0, 0, 0.04);
+    --color-selected:        rgba(0, 122, 255, 0.10);
+    --color-selected-border: rgba(0, 122, 255, 0.28);
+    --color-selected-bg:     rgba(0, 0, 0, 0.04);
+
+    --color-accent:       #007AFF;
+    --color-accent-light: rgba(0, 122, 255, 0.12);
+
+    --color-green:    #34C759;
+    --color-green-bg: rgba(52, 199, 89, 0.12);
+    --color-red:      #FF3B30;
+
+    --color-active-btn-bg:   rgba(52, 199, 89, 0.13);
+    --color-active-btn-text: #1A8A35;
+    --color-active-dot:      #34C759;
+
+    --color-tooltip-bg:     rgba(40, 40, 42, 0.92);
+    --color-tooltip-text:   rgba(255, 255, 255, 0.90);
+    --color-tooltip-border: rgba(255, 255, 255, 0.12);
+    --color-menu-bg:        rgb(250, 250, 252);
+    --color-menu-text:      rgba(0, 0, 0, 0.85);
+    --color-menu-text-dim:  rgba(0, 0, 0, 0.45);
+    --color-menu-border:    rgba(0, 0, 0, 0.10);
+    --color-menu-divider:   rgba(0, 0, 0, 0.08);
+    --color-menu-hover:     rgba(0, 0, 0, 0.06);
 }
+
+/* ─── Global base ────────────────────────────────────────────────────────────── */
+html, body, #root {
+    height: 100%;
+    background: transparent !important;
+}
+
+/* Glass input utility */
+.glass-input {
+    width: 100%;
+    padding: 7px 12px;
+    font-size: 13px;
+    border-radius: 9px;
+    border: 1px solid var(--color-input-border);
+    background: var(--color-input-bg);
+    color: var(--color-text);
+    outline: none;
+    transition: border-color 0.15s;
+    font-family: inherit;
+    -webkit-font-smoothing: antialiased;
+}
+.glass-input::placeholder { color: var(--color-text-faint); }
+.glass-input:focus { border-color: var(--color-input-focus); }
+.glass-input.error { border-color: var(--color-red); }
+
+/* Glass select */
+.glass-select {
+    width: 100%;
+    padding: 7px 12px;
+    font-size: 13px;
+    border-radius: 9px;
+    border: 1px solid var(--color-input-border);
+    background: var(--color-input-bg);
+    color: var(--color-text);
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.15s;
+    font-family: inherit;
+    -webkit-font-smoothing: antialiased;
+}
+.glass-select:focus { border-color: var(--color-input-focus); }
+
+/* Pulse animation for active dot */
+@keyframes status-pulse {
+    0%, 100% { box-shadow: 0 0 0 2px var(--color-green-bg), 0 0 5px var(--color-green); }
+    50%       { box-shadow: 0 0 0 3.5px var(--color-green-bg), 0 0 10px var(--color-green); }
+}
+.status-pulse { animation: status-pulse 2s ease-in-out infinite; }

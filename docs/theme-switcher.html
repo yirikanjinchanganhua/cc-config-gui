@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>Theme Switcher Options</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  background: #111113;
+  color: rgba(255,255,255,0.85);
+  padding: 32px 28px 80px;
+  min-height: 100vh;
+}
+
+h2 {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.7px;
+  text-transform: uppercase; color: rgba(255,255,255,0.28);
+  margin-bottom: 12px; margin-top: 32px;
+}
+h2:first-child { margin-top: 0; }
+
+/* ── card wrapper ── */
+.card {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  padding: 20px 20px 16px;
+  margin-bottom: 10px;
+}
+.card-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 24px;
+}
+.card-desc { font-size: 12px; color: rgba(255,255,255,0.38); margin-top: 10px; line-height: 1.5; }
+.card-label { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.55); flex-shrink: 0; }
+.tag {
+  display: inline-block; font-size: 10px; font-weight: 700;
+  padding: 2px 7px; border-radius: 8px; letter-spacing: 0.3px;
+  margin-left: 8px; vertical-align: middle;
+}
+.tag-rec { background: rgba(10,132,255,0.20); color: #0A84FF; }
+.tag-ok  { background: rgba(48,209,88,0.15); color: #30D158; }
+
+/* mini header context */
+.mini-header {
+  display: flex; align-items: center;
+  background: rgba(28,28,30,0.9);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  padding: 0 12px; height: 38px; gap: 8px;
+  backdrop-filter: blur(12px);
+  flex-shrink: 0;
+  min-width: 0;
+}
+.wdots { display: flex; gap: 4px; }
+.wd { width: 10px; height: 10px; border-radius: 50%; }
+.mh-logo {
+  width: 18px; height: 18px; border-radius: 5px;
+  background: linear-gradient(135deg, #0A84FF 0%, #5E5CE6 100%);
+  flex-shrink: 0;
+}
+.mh-title { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.80); white-space: nowrap; }
+.mh-div { width: 1px; height: 14px; background: rgba(255,255,255,0.12); }
+.mh-badge {
+  display: flex; align-items: center; gap: 4px;
+  padding: 2px 8px 2px 5px; border-radius: 20px;
+  background: rgba(48,209,88,0.15);
+  font-size: 10.5px; font-weight: 500; color: #30D158;
+  white-space: nowrap;
+}
+.mh-dot { width: 5px; height: 5px; border-radius: 50%; background: #30D158; }
+.spacer { flex: 1; }
+
+/* ══════════════════════════════════════
+   OPTION A — Single cycle button
+══════════════════════════════════════ */
+.cycle-btn {
+  width: 30px; height: 30px;
+  border-radius: 8px; border: none;
+  background: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.65);
+  font-size: 15px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s; flex-shrink: 0;
+  position: relative;
+}
+.cycle-btn:hover { background: rgba(255,255,255,0.13); }
+
+/* ══════════════════════════════════════
+   OPTION B — Segmented control (macOS style)
+══════════════════════════════════════ */
+.seg {
+  display: flex; align-items: center;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 9px; padding: 2px; gap: 1px;
+  flex-shrink: 0;
+}
+.seg-btn {
+  display: flex; align-items: center; gap: 4px;
+  padding: 4px 9px; border-radius: 7px; border: none;
+  background: transparent;
+  color: rgba(255,255,255,0.40);
+  font-size: 11.5px; font-weight: 500; cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+  font-family: inherit; white-space: nowrap;
+}
+.seg-btn .si { font-size: 12px; }
+.seg-btn.on {
+  background: rgba(255,255,255,0.13);
+  color: rgba(255,255,255,0.90);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+}
+.seg-btn:not(.on):hover { color: rgba(255,255,255,0.65); background: rgba(255,255,255,0.05); }
+
+/* icon-only seg */
+.seg-icon-btn {
+  width: 28px; height: 26px; border-radius: 6px; border: none;
+  background: transparent; color: rgba(255,255,255,0.38);
+  font-size: 13px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.12s, color 0.12s;
+}
+.seg-icon-btn.on {
+  background: rgba(255,255,255,0.13);
+  color: rgba(255,255,255,0.90);
+}
+.seg-icon-btn:not(.on):hover { color: rgba(255,255,255,0.65); }
+
+/* ══════════════════════════════════════
+   OPTION C — Popover menu
+══════════════════════════════════════ */
+.popover-wrap { position: relative; flex-shrink: 0; }
+.pop-trigger {
+  display: flex; align-items: center; gap: 5px;
+  padding: 4px 8px 4px 7px; border-radius: 8px; border: none;
+  background: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.70);
+  font-size: 12px; font-weight: 500; cursor: pointer;
+  transition: background 0.12s; font-family: inherit;
+  white-space: nowrap;
+}
+.pop-trigger:hover { background: rgba(255,255,255,0.13); }
+.pop-trigger .ti { font-size: 14px; }
+.pop-trigger .chevron { font-size: 8px; color: rgba(255,255,255,0.35); margin-top: 1px; }
+.popover {
+  position: absolute; top: calc(100% + 6px); right: 0;
+  background: rgba(40,40,42,0.95);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 11px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4), 0 0 0 0.5px rgba(0,0,0,0.5);
+  overflow: hidden; min-width: 140px; z-index: 100;
+  animation: popIn 0.12s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.92) translateY(-4px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+.pop-item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 8px 12px; cursor: pointer;
+  transition: background 0.10s;
+  font-size: 12.5px; color: rgba(255,255,255,0.80);
+}
+.pop-item:hover { background: rgba(255,255,255,0.07); }
+.pop-item.active { color: #0A84FF; }
+.pop-item .pi { font-size: 14px; width: 18px; text-align: center; }
+.pop-check { margin-left: auto; font-size: 12px; color: #0A84FF; }
+.pop-sep { height: 1px; background: rgba(255,255,255,0.07); margin: 3px 0; }
+.pop-item-label { font-size: 12.5px; letter-spacing: -0.1px; }
+.pop-item-sub { font-size: 10.5px; color: rgba(255,255,255,0.35); margin-top: 0px; }
+
+/* ══════════════════════════════════════
+   Show/hide popover demo
+══════════════════════════════════════ */
+.popover.hidden { display: none; }
+
+/* ══════════════════════════════════════
+   Comparison table
+══════════════════════════════════════ */
+.compare-table {
+  width: 100%; border-collapse: collapse; margin-top: 28px;
+}
+.compare-table th {
+  text-align: left; font-size: 10.5px; font-weight: 600;
+  color: rgba(255,255,255,0.28); text-transform: uppercase; letter-spacing: 0.6px;
+  padding: 0 12px 8px; border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+.compare-table td {
+  padding: 10px 12px; font-size: 12px; color: rgba(255,255,255,0.65);
+  border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: top;
+}
+.compare-table td:first-child { font-weight: 600; color: rgba(255,255,255,0.80); }
+.pro { color: #30D158; }
+.con { color: rgba(255,255,255,0.38); }
+.dot { display: inline-block; width: 5px; height: 5px; border-radius: 50%; margin-right: 6px; vertical-align: middle; margin-top: -1px; }
+.dot-g { background: #30D158; }
+.dot-r { background: rgba(255,255,255,0.25); }
+
+/* bottom floating bar */
+.bottom-bar {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: rgba(17,17,19,0.85);
+  backdrop-filter: blur(16px);
+  border-top: 1px solid rgba(255,255,255,0.07);
+  padding: 10px 28px;
+  font-size: 11.5px; color: rgba(255,255,255,0.35);
+}
+</style>
+</head>
+<body>
+
+<h2>方案 A — 单按钮循环切换 <span class="tag tag-ok">当前方案</span></h2>
+<div class="card">
+  <div class="card-row">
+    <span class="card-label">在 Header 中</span>
+    <div class="mini-header" style="width: 100%">
+      <div class="wdots">
+        <div class="wd" style="background:#FF5F57"></div>
+        <div class="wd" style="background:#FEBC2E"></div>
+        <div class="wd" style="background:#28C840"></div>
+      </div>
+      <div class="mh-logo"></div>
+      <span class="mh-title">CC Config</span>
+      <div class="mh-div"></div>
+      <span style="font-size:11.5px;color:rgba(255,255,255,0.35);font-weight:500;">⚙ 配置</span>
+      <span style="font-size:11.5px;color:rgba(255,255,255,0.28);font-weight:500;">✦ Skill</span>
+      <div class="spacer"></div>
+      <!-- 单按钮，显示当前状态 icon，click 循环 -->
+      <button class="cycle-btn" onclick="cycleA(this)" title="当前：亮色 → 点击切换暗色" id="btnA">
+        ☀️
+      </button>
+      <div class="mh-badge"><div class="mh-dot"></div>已激活</div>
+    </div>
+  </div>
+  <div class="card-desc">
+    点击按钮循环切换：☀️ 亮色 → 🌙 暗色 → 💻 跟随系统<br>
+    <span style="color:rgba(255,255,255,0.25);">问题：用户不知道有三种模式的存在，也不清楚下一步会切换到哪个状态。</span>
+  </div>
+</div>
+
+<h2>方案 B1 — 分段控件 · 带文字 <span class="tag tag-ok">macOS 原生风格</span></h2>
+<div class="card">
+  <div class="card-row">
+    <span class="card-label">在 Header 中</span>
+    <div class="mini-header" style="width:100%;">
+      <div class="wdots">
+        <div class="wd" style="background:#FF5F57"></div>
+        <div class="wd" style="background:#FEBC2E"></div>
+        <div class="wd" style="background:#28C840"></div>
+      </div>
+      <div class="mh-logo"></div>
+      <span class="mh-title">CC Config</span>
+      <div class="mh-div"></div>
+      <span style="font-size:11.5px;color:rgba(255,255,255,0.35);font-weight:500;">⚙ 配置</span>
+      <span style="font-size:11.5px;color:rgba(255,255,255,0.28);font-weight:500;">✦ Skill</span>
+      <div class="spacer"></div>
+      <!-- 带文字分段控件 -->
+      <div class="seg" id="segB1">
+        <button class="seg-btn on" onclick="switchSeg('segB1',this)"><span class="si">☀️</span> 亮色</button>
+        <button class="seg-btn" onclick="switchSeg('segB1',this)"><span class="si">🌙</span> 暗色</button>
+        <button class="seg-btn" onclick="switchSeg('segB1',this)"><span class="si">💻</span> 系统</button>
+      </div>
+      <div class="mh-badge" style="margin-left:8px;"><div class="mh-dot"></div>已激活</div>
+    </div>
+  </div>
+  <div class="card-desc">
+    三个选项一目了然，和 macOS 系统偏好设置的「外观」选择器完全一致。<br>
+    <span style="color:rgba(255,255,255,0.25);">缺点：约 170px 宽，header 比较紧凑时会有点挤。</span>
+  </div>
+</div>
+
+<h2>方案 B2 — 分段控件 · 仅图标 <span class="tag tag-rec">推荐</span></h2>
+<div class="card">
+  <div class="card-row">
+    <span class="card-label">在 Header 中</span>
+    <div class="mini-header" style="width:100%;">
+      <div class="wdots">
+        <div class="wd" style="background:#FF5F57"></div>
+        <div class="wd" style="background:#FEBC2E"></div>
+        <div class="wd" style="background:#28C840"></div>
+      </div>
+      <div class="mh-logo"></div>
+      <span class="mh-title">CC Config</span>
+      <div class="mh-div"></div>
+      <span style="font-size:11.5px;color:rgba(255,255,255,0.35);font-weight:500;">⚙ 配置</span>
+      <span style="font-size:11.5px;color:rgba(255,255,255,0.28);font-weight:500;">✦ Skill</span>
+      <div class="spacer"></div>
+      <!-- 仅图标分段控件 -->
+      <div class="seg" id="segB2" style="padding:2px;gap:1px;">
+        <button class="seg-icon-btn on" onclick="switchSeg('segB2',this)" title="亮色模式">☀️</button>
+        <button class="seg-icon-btn" onclick="switchSeg('segB2',this)" title="暗色模式">🌙</button>
+        <button class="seg-icon-btn" onclick="switchSeg('segB2',this)" title="跟随系统">💻</button>
+      </div>
+      <div class="mh-badge" style="margin-left:8px;"><div class="mh-dot"></div>已激活</div>
+    </div>
+  </div>
+  <div class="card-desc">
+    约 90px，紧凑但一眼能看到三个状态，hover 有 tooltip 说明。平衡了可见性和空间占用。<br>
+    <span style="color:rgba(255,255,255,0.25);">鼠标 hover 可以加 tooltip 标注每个图标的含义。</span>
+  </div>
+</div>
+
+<h2>方案 C — 点击弹出 Popover 菜单</h2>
+<div class="card">
+  <div class="card-row">
+    <span class="card-label">在 Header 中</span>
+    <div class="mini-header" style="width:100%;overflow:visible;position:relative;">
+      <div class="wdots">
+        <div class="wd" style="background:#FF5F57"></div>
+        <div class="wd" style="background:#FEBC2E"></div>
+        <div class="wd" style="background:#28C840"></div>
+      </div>
+      <div class="mh-logo"></div>
+      <span class="mh-title">CC Config</span>
+      <div class="mh-div"></div>
+      <span style="font-size:11.5px;color:rgba(255,255,255,0.35);font-weight:500;">⚙ 配置</span>
+      <span style="font-size:11.5px;color:rgba(255,255,255,0.28);font-weight:500;">✦ Skill</span>
+      <div class="spacer"></div>
+      <!-- 触发器按钮 + popover -->
+      <div class="popover-wrap">
+        <button class="pop-trigger" onclick="togglePop()" id="popTrigger">
+          <span class="ti">☀️</span>
+          <span>亮色</span>
+          <span class="chevron">▾</span>
+        </button>
+        <div class="popover hidden" id="popMenu">
+          <div class="pop-item" onclick="selectPop(this,'☀️','亮色')">
+            <span class="pi">☀️</span>
+            <div><div class="pop-item-label">亮色</div></div>
+            <span class="pop-check">✓</span>
+          </div>
+          <div class="pop-item" onclick="selectPop(this,'🌙','暗色')">
+            <span class="pi">🌙</span>
+            <div><div class="pop-item-label">暗色</div></div>
+          </div>
+          <div class="pop-sep"></div>
+          <div class="pop-item" onclick="selectPop(this,'💻','跟随系统')">
+            <span class="pi">💻</span>
+            <div>
+              <div class="pop-item-label">跟随系统</div>
+              <div class="pop-item-sub">自动匹配 macOS 设置</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="mh-badge" style="margin-left:8px;"><div class="mh-dot"></div>已激活</div>
+    </div>
+  </div>
+  <div class="card-desc">
+    触发器只显示当前模式，约 70px。点击展开 popover，可以加副标题说明。<br>
+    <span style="color:rgba(255,255,255,0.25);">缺点：需要两次点击才能切换；但信息最丰富，「跟随系统」可以加副标题解释。</span>
+  </div>
+</div>
+
+<!-- Comparison table -->
+<table class="compare-table">
+  <tr>
+    <th>方案</th>
+    <th>占用宽度</th>
+    <th>优点</th>
+    <th>缺点</th>
+    <th>适合场景</th>
+  </tr>
+  <tr>
+    <td>A · 循环按钮</td>
+    <td>30px</td>
+    <td class="pro">
+      <span class="dot dot-g"></span>极简<br>
+      <span class="dot dot-g"></span>符合直觉
+    </td>
+    <td class="con">
+      <span class="dot dot-r"></span>不知道有3种<br>
+      <span class="dot dot-r"></span>下一步不可预测
+    </td>
+    <td style="color:rgba(255,255,255,0.35)">header 极度紧张</td>
+  </tr>
+  <tr>
+    <td>B1 · 分段 + 文字</td>
+    <td>~170px</td>
+    <td class="pro">
+      <span class="dot dot-g"></span>最清晰<br>
+      <span class="dot dot-g"></span>macOS 原生感
+    </td>
+    <td class="con">
+      <span class="dot dot-r"></span>较宽，占空间
+    </td>
+    <td style="color:rgba(255,255,255,0.35)">header 宽敞</td>
+  </tr>
+  <tr>
+    <td>B2 · 分段仅图标 ★</td>
+    <td>~90px</td>
+    <td class="pro">
+      <span class="dot dot-g"></span>三态可见<br>
+      <span class="dot dot-g"></span>紧凑<br>
+      <span class="dot dot-g"></span>操作直接
+    </td>
+    <td class="con">
+      <span class="dot dot-r"></span>图标需 tooltip 辅助
+    </td>
+    <td style="color:rgba(255,255,255,0.35)"><strong style="color:rgba(255,255,255,0.7)">推荐 ✓</strong></td>
+  </tr>
+  <tr>
+    <td>C · Popover 菜单</td>
+    <td>~70px</td>
+    <td class="pro">
+      <span class="dot dot-g"></span>可加说明文字<br>
+      <span class="dot dot-g"></span>紧凑
+    </td>
+    <td class="con">
+      <span class="dot dot-r"></span>两次点击<br>
+      <span class="dot dot-r"></span>实现略复杂
+    </td>
+    <td style="color:rgba(255,255,255,0.35)">功能较多的工具栏</td>
+  </tr>
+</table>
+
+<div class="bottom-bar">点击各方案中的控件可以交互体验 · 推荐 B2「图标分段控件」：最接近 macOS 原生，空间效率最高</div>
+
+<script>
+// A: cycle
+const iconsA = ['☀️','🌙','💻'];
+let idxA = 0;
+function cycleA(btn) {
+  idxA = (idxA + 1) % 3;
+  btn.textContent = iconsA[idxA];
+}
+
+// B: segmented
+function switchSeg(id, btn) {
+  document.querySelectorAll('#' + id + ' button').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+}
+
+// C: popover
+let popOpen = false;
+function togglePop() {
+  popOpen = !popOpen;
+  document.getElementById('popMenu').classList.toggle('hidden', !popOpen);
+}
+function selectPop(item, icon, label) {
+  document.querySelectorAll('#popMenu .pop-item .pop-check').forEach(c => c.remove());
+  const check = document.createElement('span');
+  check.className = 'pop-check'; check.textContent = '✓';
+  item.appendChild(check);
+  document.getElementById('popTrigger').innerHTML =
+    `<span class="ti">${icon}</span><span>${label}</span><span class="chevron">▾</span>`;
+  popOpen = false;
+  document.getElementById('popMenu').classList.add('hidden');
+}
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.popover-wrap')) {
+    popOpen = false;
+    document.getElementById('popMenu').classList.add('hidden');
+  }
+});
+</script>
+</body>
+</html>
