@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import type { RawProfile, ApiStyle } from '../lib/types';
+import type { RawProfile, ApiStyle, Provider } from '../lib/types';
+import { PROVIDER_LABELS, PROVIDER_MODELS, inferProviderFromModel } from '../lib/models';
 
 interface ProfileFormProps {
     initialValues?: RawProfile;
@@ -7,11 +8,13 @@ interface ProfileFormProps {
     onCancel: () => void;
 }
 
-const COMMON_MODELS = [
-    'claude-sonnet-4-6',
-    'claude-opus-4-6',
-    'claude-haiku-4-5-20251001',
-];
+/** 厂商选项配置 */
+const PROVIDER_OPTIONS = (Object.keys(PROVIDER_LABELS) as Provider[]).map(
+    (value) => ({
+        value,
+        label: PROVIDER_LABELS[value],
+    })
+);
 
 /** API 风格选项配置 */
 const API_STYLE_OPTIONS: { value: ApiStyle; label: string; desc: string }[] = [
@@ -49,18 +52,31 @@ export default function ProfileForm({
 }: ProfileFormProps): JSX.Element {
     const isEditing = initialValues !== undefined;
 
-    const [values, setValues] = useState<RawProfile>({
-        name: initialValues?.name ?? '',
-        apiKey: initialValues?.apiKey ?? '',
-        baseUrl: initialValues?.baseUrl ?? '',
-        model: initialValues?.model ?? '',
-        apiStyle: initialValues?.apiStyle ?? 'auto',
+    const [values, setValues] = useState<RawProfile>(() => {
+        const initialProvider = initialValues?.provider ??
+            (initialValues?.model ? inferProviderFromModel(initialValues.model) : 'anthropic');
+        return {
+            name: initialValues?.name ?? '',
+            apiKey: initialValues?.apiKey ?? '',
+            baseUrl: initialValues?.baseUrl ?? '',
+            model: initialValues?.model ?? '',
+            apiStyle: initialValues?.apiStyle ?? 'auto',
+            provider: initialProvider,
+        };
     });
     const [errors, setErrors] = useState<
         Partial<Record<keyof RawProfile, string>>
     >({});
     const [showApiKey, setShowApiKey] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+    const [customModelMode, setCustomModelMode] = useState(() => {
+        // 如果是 other 厂商或者模型不在列表中，使用自定义模式
+        if (initialValues?.provider === 'other') return true;
+        if (initialValues?.model && !PROVIDER_MODELS[initialValues?.provider ?? 'anthropic']?.includes(initialValues.model)) {
+            return true;
+        }
+        return false;
+    });
 
     const firstInputRef = useRef<HTMLInputElement>(null);
 
@@ -104,16 +120,27 @@ export default function ProfileForm({
                 baseUrl: values.baseUrl.trim(),
                 model: values.model.trim(),
                 apiStyle: values.apiStyle ?? 'auto',
+                provider: values.provider,
             });
         } finally {
             setSubmitting(false);
         }
     }
 
-    function setField(key: keyof RawProfile, value: string) {
+    function setField(key: keyof RawProfile, value: string | Provider) {
         setValues((prev) => ({ ...prev, [key]: value }));
         if (errors[key as keyof typeof errors])
             setErrors((prev) => ({ ...prev, [key]: undefined }));
+    }
+
+    function handleProviderChange(newProvider: Provider) {
+        setCustomModelMode(newProvider === 'other');
+        setValues((prev) => ({
+            ...prev,
+            provider: newProvider,
+            model: '', // 切换厂商时清空模型
+        }));
+        if (errors.model) setErrors((prev) => ({ ...prev, model: undefined }));
     }
 
     const inputBase = [
@@ -240,27 +267,89 @@ export default function ProfileForm({
                         )}
                     </div>
 
+                    {/* 厂商 */}
+                    <div className="flex flex-col gap-1.5">
+                        <label className="text-sm font-medium text-theme-text">
+                            厂商
+                        </label>
+                        <select
+                            value={values.provider ?? 'anthropic'}
+                            onChange={(e) => handleProviderChange(e.target.value as Provider)}
+                            className={[
+                                inputBase,
+                                'cursor-pointer',
+                            ].join(' ')}
+                        >
+                            {PROVIDER_OPTIONS.map((opt) => (
+                                <option key={opt.value} value={opt.value}>
+                                    {opt.label}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
                     {/* Model */}
                     <div className="flex flex-col gap-1.5">
                         <label className="text-sm font-medium text-theme-text">
                             Model
                         </label>
-                        <input
-                            type="text"
-                            list="profile-form-model-list"
-                            value={values.model}
-                            onChange={(e) => setField('model', e.target.value)}
-                            placeholder="claude-sonnet-4-6"
-                            className={[
-                                inputBase,
-                                errors.model ? inputInvalid : inputValid,
-                            ].join(' ')}
-                        />
-                        <datalist id="profile-form-model-list">
-                            {COMMON_MODELS.map((m) => (
-                                <option key={m} value={m} />
-                            ))}
-                        </datalist>
+                        {customModelMode || values.provider === 'other' ? (
+                            <>
+                                <input
+                                    type="text"
+                                    value={values.model}
+                                    onChange={(e) => setField('model', e.target.value)}
+                                    placeholder="输入自定义模型名称"
+                                    className={[
+                                        inputBase,
+                                        errors.model ? inputInvalid : inputValid,
+                                    ].join(' ')}
+                                />
+                                {values.provider !== 'other' && (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setCustomModelMode(false);
+                                            setField('model', '');
+                                        }}
+                                        className="text-xs text-blue-500 hover:text-blue-600 text-left"
+                                    >
+                                        返回选择列表
+                                    </button>
+                                )}
+                            </>
+                        ) : (
+                            <>
+                                <select
+                                    value={values.model}
+                                    onChange={(e) => {
+                                        if (e.target.value === '__custom__') {
+                                            setCustomModelMode(true);
+                                            setField('model', '');
+                                        } else {
+                                            setField('model', e.target.value);
+                                        }
+                                    }}
+                                    className={[
+                                        inputBase,
+                                        'cursor-pointer',
+                                        errors.model ? inputInvalid : inputValid,
+                                    ].join(' ')}
+                                >
+                                    <option value="" disabled>
+                                        选择模型
+                                    </option>
+                                    {PROVIDER_MODELS[values.provider ?? 'anthropic'].map((m) => (
+                                        <option key={m} value={m}>
+                                            {m}
+                                        </option>
+                                    ))}
+                                    <option value="__custom__">
+                                        自定义...
+                                    </option>
+                                </select>
+                            </>
+                        )}
                         {errors.model && (
                             <p className="text-xs text-red-500">
                                 {errors.model}

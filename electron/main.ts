@@ -111,10 +111,10 @@ function registerIpcHandlers(): void {
     // profiles:update → 入参 { id } & RawProfile，更新并返回 Profile
     ipcMain.handle(
         'profiles:update',
-        (
+        async (
             _event,
             payload: { id: string } & RawProfile,
-        ): Profile | { error: string } => {
+        ): Promise<Profile | { error: string }> => {
             try {
                 const { id, ...raw } = payload;
                 const store = getStore();
@@ -122,6 +122,15 @@ function registerIpcHandlers(): void {
                 if (idx === -1) return { error: `Profile ${id} not found` };
                 store.profiles[idx] = { ...store.profiles[idx], ...raw };
                 saveStore(store);
+                // 若修改的是当前激活档案，同步写入 settings.json
+                if (store.activeProfileId === id) {
+                    const updated = store.profiles[idx];
+                    await upsertEnv({
+                        ANTHROPIC_API_KEY: updated.apiKey,
+                        ANTHROPIC_BASE_URL: updated.baseUrl,
+                        ANTHROPIC_MODEL: updated.model,
+                    });
+                }
                 return store.profiles[idx];
             } catch (err) {
                 return { error: String(err) };
