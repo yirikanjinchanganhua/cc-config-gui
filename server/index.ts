@@ -279,7 +279,7 @@ async function main(): Promise<void> {
     });
 
     // PUT /api/profiles/:id → 更新 Profile（Body: RawProfile）
-    app.put('/api/profiles/:id', (req, res) => {
+    app.put('/api/profiles/:id', async (req, res) => {
         try {
             const { id } = req.params;
             const raw = req.body as RawProfile;
@@ -291,6 +291,15 @@ async function main(): Promise<void> {
             }
             store.profiles[idx] = { ...store.profiles[idx]!, ...raw };
             saveStore(store);
+            // 若修改的是当前激活档案，同步写入 settings.json
+            if (store.activeProfileId === id) {
+                const updated = store.profiles[idx]!;
+                await upsertEnv({
+                    ANTHROPIC_API_KEY: updated.apiKey,
+                    ANTHROPIC_BASE_URL: updated.baseUrl,
+                    ANTHROPIC_MODEL: updated.model,
+                });
+            }
             res.json(store.profiles[idx]);
         } catch (err) {
             res.status(500).json({ error: String(err) });
